@@ -8,7 +8,7 @@ import java.io.OutputStream
 import java.lang.UnsupportedOperationException
 import java.net.URL
 
-class UrlFileSource(private val url: URL): FileSource {
+internal class UrlFileSource(private val url: URL): FileSource {
     /** Deletes file(s) */
     override fun delete(name: String): Unit = throw UnsupportedOperationException("Not writable")
 

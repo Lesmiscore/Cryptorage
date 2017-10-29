@@ -15,14 +15,22 @@ import java.security.MessageDigest
 import java.util.*
 import kotlin.collections.ArrayList
 
-class CryptorageImplV1(private val source: FileSource, password: String): Cryptorage{
+internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys): Cryptorage{
     companion object {
         const val MANIFEST:String = "manifest"
         const val SPLIT_SIZE:String = "split_size"
         const val SPLIT_SIZE_DEFAULT:Int = 100*1024 /* 100kb */
+
+        private fun populateKeys(password: String): AesKeys{
+            val utf8Bytes1=password.utf8Bytes()
+            val utf8Bytes2="$password$password".utf8Bytes()
+            val hash=MessageDigest.getInstance("sha-256")
+            return Pair(hash.digest(hash.digest(utf8Bytes1)).takePrimitive(16),hash.digest(hash.digest(utf8Bytes2)).tailPrimitive(16))
+        }
     }
 
-    private val keys=populateKeys(password)
+    constructor(source: FileSource, password: String): this(source, populateKeys(password))
+
     private val files:MutableMap<String,CryptorageFile> =readFiles()
     private val meta:MutableMap<String,String> = readMeta()
 
@@ -105,14 +113,6 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         unused.forEach {
             source.delete(it)
         }
-    }
-
-
-    private fun populateKeys(password: String): AesKeys{
-        val utf8Bytes1=password.utf8Bytes()
-        val utf8Bytes2="$password$password".utf8Bytes()
-        val hash=MessageDigest.getInstance("sha-256")
-        return Pair(hash.digest(hash.digest(utf8Bytes1)).takePrimitive(16),hash.digest(hash.digest(utf8Bytes2)).tailPrimitive(16))
     }
 
     private data class CryptorageFile(var files: MutableList<String> = ArrayList(),var splitSize: Int = 0,var lastModified: Long = 0,var size: Long = 0) {

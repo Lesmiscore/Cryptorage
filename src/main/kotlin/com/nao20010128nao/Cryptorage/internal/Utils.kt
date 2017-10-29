@@ -2,7 +2,15 @@ package com.nao20010128nao.Cryptorage.internal
 
 import com.google.common.io.ByteSource
 import com.google.common.io.CharSource
+import com.nao20010128nao.Cryptorage.Cryptorage
+import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
+import com.nao20010128nao.Cryptorage.file.DirectoryFileSource
+import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.file.MemoryFileSource
+import com.nao20010128nao.Cryptorage.file.UrlFileSource
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.spec.IvParameterSpec
@@ -38,3 +46,15 @@ fun ByteSource.asCharSource(): CharSource = this.asCharSource(StandardCharsets.U
 fun generateRandomName():String =
         UUID.randomUUID().toString().replace("-","")+
                 UUID.randomUUID().toString().replace("-","")
+
+fun URL.asFileSource(): FileSource
+        = UrlFileSource(this)
+fun File.asFileSource(): FileSource
+        = DirectoryFileSource(this)
+fun newMemoryFileSource(): FileSource
+        = MemoryFileSource()
+
+fun FileSource.withV1Encryption(password: String): Cryptorage
+        = CryptorageImplV1(this,password)
+fun FileSource.withV1Encryption(keys: AesKeys): Cryptorage
+        = CryptorageImplV1(this,keys)

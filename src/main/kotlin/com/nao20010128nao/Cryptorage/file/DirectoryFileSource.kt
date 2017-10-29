@@ -7,7 +7,7 @@ import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 
-class DirectoryFileSource(private val dir:File): FileSource{
+internal class DirectoryFileSource(private val dir:File): FileSource{
     /** Lists up file names */
     override fun list(): Array<String> = dir.list()?: arrayOf()
 

@@ -11,7 +11,7 @@ import java.util.*;
 
 public class Tests extends TestCase{
     public void testSimpleWriting()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
+        Cryptorage cryptorage=UtilsKt.withV1Encryption(UtilsKt.newMemoryFileSource(),"test");
         SecureRandom sr=new SecureRandom();
         byte[] test=new byte[1024*1024];
         sr.nextBytes(test);
@@ -28,7 +28,7 @@ public class Tests extends TestCase{
         assertTrue(Arrays.equals(hashed, md.digest(read)));
     }
     public void testSimpleWriting2()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
+        Cryptorage cryptorage=UtilsKt.withV1Encryption(UtilsKt.newMemoryFileSource(),"test");
         String payload="It's a small world";
 
         byte[] test=payload.getBytes();
@@ -55,7 +55,7 @@ public class Tests extends TestCase{
         is.close();
     }
     public void testWriteSize()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
+        Cryptorage cryptorage=UtilsKt.withV1Encryption(UtilsKt.newMemoryFileSource(),"test");
         String payload="It's a small world";
 
         byte[] test=payload.getBytes();
@@ -79,7 +79,7 @@ public class Tests extends TestCase{
     }
 
     public void testOverWrite()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
+        Cryptorage cryptorage=UtilsKt.withV1Encryption(UtilsKt.newMemoryFileSource(),"test");
         SecureRandom sr=new SecureRandom();
         byte[] test=new byte[1024*1024];
         sr.nextBytes(test);
@@ -100,7 +100,7 @@ public class Tests extends TestCase{
         assertTrue(Arrays.equals(hashed, md.digest(read)));
     }
     public void testSkip()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
+        Cryptorage cryptorage=UtilsKt.withV1Encryption(UtilsKt.newMemoryFileSource(),"test");
         SecureRandom sr=new SecureRandom();
         byte[] test=new byte[1024*1024];
         sr.nextBytes(test);
@@ -118,8 +118,8 @@ public class Tests extends TestCase{
         assertTrue(Arrays.equals(hashed, md.digest(read)));
     }
     public void testReopen()throws Throwable{
-        MemoryFileSource memory=new MemoryFileSource();
-        Cryptorage cryptorage=new CryptorageImplV1(memory,"test");
+        FileSource memory=UtilsKt.newMemoryFileSource();
+        Cryptorage cryptorage=UtilsKt.withV1Encryption(memory,"test");
         String payload="It's a small world";
 
         byte[] test=payload.getBytes();
@@ -133,7 +133,7 @@ public class Tests extends TestCase{
         assertTrue(Arrays.asList(cryptorage.list()).contains("file1"));
         assertTrue(Arrays.asList(cryptorage.list()).contains("file2"));
 
-        Cryptorage cryptorageReopen=new CryptorageImplV1(memory,"test");
+        Cryptorage cryptorageReopen=UtilsKt.withV1Encryption(memory,"test");
         assertTrue(Arrays.asList(cryptorageReopen.list()).contains("file1"));
         assertTrue(Arrays.asList(cryptorageReopen.list()).contains("file2"));
     }

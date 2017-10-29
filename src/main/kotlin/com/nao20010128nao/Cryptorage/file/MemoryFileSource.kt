@@ -6,7 +6,7 @@ import com.nao20010128nao.Cryptorage.internal.crop
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
-class MemoryFileSource : FileSource{
+internal class MemoryFileSource : FileSource{
     val map: MutableMap<String,ByteArray> = HashMap()
 
     /** Lists up file names */
