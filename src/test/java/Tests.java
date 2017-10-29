@@ -87,4 +87,45 @@ public class Tests extends TestCase{
         },a-> null);
         stream.write(payload.getBytes());
     }
+
+    public void testOverWrite()throws Throwable{
+        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ UUID.randomUUID())),"test");
+        SecureRandom sr=new SecureRandom();
+        byte[] test=new byte[1024*1024];
+        sr.nextBytes(test);
+        OutputStream dest=cryptorage.put("test").openBufferedStream();
+        dest.write(test);
+        dest.close();
+        sr.nextBytes(test);
+        dest=cryptorage.put("test").openBufferedStream();
+        dest.write(test);
+        dest.close();
+        MessageDigest md=MessageDigest.getInstance("sha-256");
+        byte[] hashed=md.digest(test);
+
+        InputStream is=cryptorage.open("test",0).openBufferedStream();
+        byte[] read= ByteStreams.toByteArray(is);
+        is.close();
+
+        assertTrue(Arrays.equals(hashed, md.digest(read)));
+    }
+    public void testSkip()throws Throwable{
+        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ UUID.randomUUID())),"test");
+        SecureRandom sr=new SecureRandom();
+        byte[] test=new byte[1024*1024];
+        sr.nextBytes(test);
+        OutputStream dest=cryptorage.put("test").openBufferedStream();
+        dest.write(test);
+        dest.close();
+        MessageDigest md=MessageDigest.getInstance("sha-256");
+        md.update(test,1000000,test.length-1000000);
+        byte[] hashed=md.digest();
+
+        InputStream is=cryptorage.open("test",1000000).openBufferedStream();
+        byte[] read= ByteStreams.toByteArray(is);
+        is.close();
+
+        assertTrue(Arrays.equals(hashed, md.digest(read)));
+    }
+
 }
