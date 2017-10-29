@@ -48,7 +48,8 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         val splitSize=(meta[SPLIT_SIZE]?:"$SPLIT_SIZE_DEFAULT").toInt()
         val file= CryptorageFile(ArrayList(),splitSize,System.currentTimeMillis())
         files[name]=file
-        return ChainedEncryptor(source,splitSize,keys,file)
+        commit()
+        return ChainedEncryptor(source,splitSize,keys,file,{commit()})
     }
 
     /** Moves file */
@@ -60,6 +61,7 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
             delete(to)
         }
         files[to] = files[from]!!
+        commit()
     }
 
     /** Deletes a file */
@@ -71,6 +73,8 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         removal.forEach {
             source.delete(it)
         }
+        files.remove(name)
+        commit()
     }
 
     /** Checks last modified date and time */
@@ -140,6 +144,20 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         else -> HashMap()
     }
 
+    private fun commit(){
+        val root=JsonObject()
+        root["files"]=files.mapValues {
+            mapOf(
+                    "files" to it.value.files,
+                    "splitSize" to it.value.splitSize,
+                    "lastModified" to it.value.lastModified,
+                    "size" to it.value.size
+            )
+        }
+        root["meta"]=meta
+        AesEncryptorByteSink(source.put("manifest"),keys).write(root.toJsonString(false).utf8Bytes())
+    }
+
     private class ChainedDecryptor(private var source: FileSource,private var keys: AesKeys,private var files:List<String>,private var bytesToSkip: Int=0): ByteSource(){
         override fun openStream(): InputStream = SequenceInputStream(
                Collections.enumeration(files.map { source.open(it) }.map { AesDecryptorByteSource(it,keys) }.map { it.openStream() })
@@ -148,7 +166,13 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         }
     }
 
-    private class ChainedEncryptor(private var source: FileSource,private val size: Int,private var keys: AesKeys,private var file: CryptorageFile): ByteSink(){
+    private class ChainedEncryptor(
+            private var source: FileSource,
+            private val size: Int,
+            private var keys: AesKeys,
+            private var file: CryptorageFile,
+            private val commit: ()->Unit
+    ): ByteSink(){
         var current: OutputStream? = null
 
         override fun openStream(): OutputStream {
@@ -158,6 +182,7 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
                     source.delete(it)
                 }
                 file.files=ArrayList()
+                commit()
             }
             current=object: OutputStream(){
                 var filling: OutputStream? = null
@@ -187,6 +212,7 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
                     }
                     file.files.add(randName)
                     file.size+=me.size()
+                    commit()
                 }
 
                 override fun write(p0: Int) {

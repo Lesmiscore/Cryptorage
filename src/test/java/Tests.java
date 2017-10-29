@@ -117,5 +117,24 @@ public class Tests extends TestCase{
 
         assertTrue(Arrays.equals(hashed, md.digest(read)));
     }
+    public void testReopen()throws Throwable{
+        MemoryFileSource memory=new MemoryFileSource();
+        Cryptorage cryptorage=new CryptorageImplV1(memory,"test");
+        String payload="It's a small world";
 
+        byte[] test=payload.getBytes();
+        OutputStream dest=cryptorage.put("file1").openBufferedStream();
+        dest.write(test);
+        dest.close();
+        dest=cryptorage.put("file2").openBufferedStream();
+        dest.write(test);
+        dest.write(test);
+        dest.close();
+        assertTrue(Arrays.asList(cryptorage.list()).contains("file1"));
+        assertTrue(Arrays.asList(cryptorage.list()).contains("file2"));
+
+        Cryptorage cryptorageReopen=new CryptorageImplV1(memory,"test");
+        assertTrue(Arrays.asList(cryptorageReopen.list()).contains("file1"));
+        assertTrue(Arrays.asList(cryptorageReopen.list()).contains("file2"));
+    }
 }
