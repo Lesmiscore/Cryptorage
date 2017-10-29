@@ -13,8 +13,6 @@ import java.io.OutputStream
 import java.io.SequenceInputStream
 import java.security.MessageDigest
 import java.util.*
-import javax.crypto.Cipher
-import javax.crypto.CipherOutputStream
 import kotlin.collections.ArrayList
 
 class CryptorageImplV1(private val source: FileSource, password: String): Cryptorage{

@@ -10,14 +10,8 @@ import java.security.*;
 import java.util.*;
 
 public class Tests extends TestCase{
-    public Tests(){
-        if(!System.getProperty("os.name").toLowerCase().contains("linux")){
-            throw new IllegalStateException("Run on Linux");
-        }
-    }
-
     public void testSimpleWriting()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ UUID.randomUUID())),"test");
+        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
         SecureRandom sr=new SecureRandom();
         byte[] test=new byte[1024*1024];
         sr.nextBytes(test);
@@ -34,9 +28,7 @@ public class Tests extends TestCase{
         assertTrue(Arrays.equals(hashed, md.digest(read)));
     }
     public void testSimpleWriting2()throws Throwable{
-        String where=UUID.randomUUID().toString();
-        System.out.println(where);
-        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ where)),"test");
+        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
         String payload="It's a small world";
 
         byte[] test=payload.getBytes();
@@ -63,9 +55,7 @@ public class Tests extends TestCase{
         is.close();
     }
     public void testWriteSize()throws Throwable{
-        String where=UUID.randomUUID().toString();
-        System.out.println(where);
-        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ where)),"test");
+        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
         String payload="It's a small world";
 
         byte[] test=payload.getBytes();
@@ -89,7 +79,7 @@ public class Tests extends TestCase{
     }
 
     public void testOverWrite()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ UUID.randomUUID())),"test");
+        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
         SecureRandom sr=new SecureRandom();
         byte[] test=new byte[1024*1024];
         sr.nextBytes(test);
@@ -110,7 +100,7 @@ public class Tests extends TestCase{
         assertTrue(Arrays.equals(hashed, md.digest(read)));
     }
     public void testSkip()throws Throwable{
-        Cryptorage cryptorage=new CryptorageImplV1(new DirectoryFileSource(new File("/tmp/"+ UUID.randomUUID())),"test");
+        Cryptorage cryptorage=new CryptorageImplV1(new MemoryFileSource(),"test");
         SecureRandom sr=new SecureRandom();
         byte[] test=new byte[1024*1024];
         sr.nextBytes(test);
