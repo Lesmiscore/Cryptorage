@@ -4,6 +4,7 @@ import com.google.common.io.ByteSource
 import com.google.common.io.CharSource
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
+import java.util.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
@@ -23,7 +24,17 @@ fun ByteArray.tailPrimitive(n:Int):ByteArray=
             it.write(this,size-n,n)
             it.toByteArray()
         }
+fun ByteArray.crop(off: Int, len: Int):ByteArray=
+        ByteArrayOutputStream().let {
+            it.write(this,off,len)
+            it.toByteArray()
+        }
 fun AesKey.toCryptoKey():SecretKeySpec = SecretKeySpec(this,"AES")
 fun AesIv.toCryptoIv(): IvParameterSpec = IvParameterSpec(this)
 fun AesKeys.forCrypto(): Pair<SecretKeySpec,IvParameterSpec> = Pair(first.toCryptoKey(),second.toCryptoIv())
 fun ByteSource.asCharSource(): CharSource = this.asCharSource(StandardCharsets.UTF_8)
+
+/* Caution: this has no grantee not to be duplicate */
+fun generateRandomName():String =
+        UUID.randomUUID().toString().replace("-","")+
+                UUID.randomUUID().toString().replace("-","")

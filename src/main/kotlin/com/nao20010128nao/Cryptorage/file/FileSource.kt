@@ -11,8 +11,10 @@ interface FileSource {
     fun open(name: String,offset:Int =0): ByteSource
     /** Opens file for writing */
     fun put(name: String): ByteSink
-    /** Deletes file(s) */
+    /** Deletes a file */
     fun delete(name: String)
+    /** Checks file exist */
+    fun has(name: String): Boolean = list().contains(name)
     /** Checks Cryptorage is read-only */
     val isReadOnly: Boolean
 }

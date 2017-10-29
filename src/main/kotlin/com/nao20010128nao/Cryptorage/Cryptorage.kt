@@ -14,10 +14,10 @@ interface Cryptorage : FileSource/* allow itself to be a FileSource */ {
     override fun put(name: String): ByteSink
     /** Moves file */
     fun mv(from: String,to: String)
-    /** Deletes file(s) */
+    /** Deletes a file */
     override fun delete(name: String)
     /** Checks file exist */
-    fun has(name: String): Boolean = list().contains(name)
+    override fun has(name: String): Boolean = list().contains(name)
     /** Checks last modified date and time */
     fun lastModified(name: String): Long
     /** Checks Cryptorage is read-only */
