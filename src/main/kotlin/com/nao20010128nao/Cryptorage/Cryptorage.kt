@@ -20,6 +20,8 @@ interface Cryptorage : FileSource/* allow itself to be a FileSource */ {
     override fun has(name: String): Boolean = list().contains(name)
     /** Checks last modified date and time */
     fun lastModified(name: String): Long
+    /** Checks the size */
+    fun size(name: String): Long
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean
     /** Removes unused files */

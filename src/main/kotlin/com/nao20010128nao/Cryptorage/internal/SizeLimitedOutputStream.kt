@@ -4,7 +4,7 @@ import java.io.*
 
 class SizeLimitedOutputStream(
         limit: Int,
-        private val next: (SizeLimitedOutputStream,OverflowError)->Unit,
+        private val next: ((SizeLimitedOutputStream,OverflowError)->Unit)?,
         private val close: ((SizeLimitedOutputStream)->Unit)?
 ) : OutputStream() {
     val buffer: ByteArray
@@ -20,7 +20,7 @@ class SizeLimitedOutputStream(
 
     override fun write(b: Int) {
         if (count >= buffer.size) {
-            next(this,OverflowError(b.toByte()))
+            next?.invoke(this,OverflowError(b.toByte()))
             return
         }
         buffer[count++] = b.toByte()
@@ -39,7 +39,7 @@ class SizeLimitedOutputStream(
             val oldCount=count
             System.arraycopy(b, off, buffer, count,  buffer.size - count)
             count = buffer.size
-            next(this,OverflowError(b,off + buffer.size - oldCount,buffer.size - count))
+            next?.invoke(this,OverflowError(b,off +(buffer.size - oldCount),len-(buffer.size - oldCount)))
             return
         }
 

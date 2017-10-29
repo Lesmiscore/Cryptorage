@@ -9,7 +9,7 @@ import java.io.OutputStream
 
 class DirectoryFileSource(private val dir:File): FileSource{
     /** Lists up file names */
-    override fun list(): Array<String> = dir.list()
+    override fun list(): Array<String> = dir.list()?: arrayOf()
 
     /** Deletes file(s) */
     override fun delete(name: String) { File(dir,name).delete()}

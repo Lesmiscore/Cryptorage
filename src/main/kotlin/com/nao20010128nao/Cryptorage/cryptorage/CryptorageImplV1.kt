@@ -49,6 +49,7 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         }
         val splitSize=(meta[SPLIT_SIZE]?:"$SPLIT_SIZE_DEFAULT").toInt()
         val file= CryptorageFile(ArrayList(),splitSize,System.currentTimeMillis())
+        files[name]=file
         return ChainedEncryptor(source,splitSize,keys,file)
     }
 
@@ -84,6 +85,13 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
     override val isReadOnly: Boolean
         get() = source.isReadOnly
 
+    override fun size(name: String): Long {
+        if(!has(name)){
+            throw FileNotFoundException(name)
+        }
+        return files[name]!!.size
+    }
+
     /** Removes unused files */
     override fun gc() {
         val ls=source.list().toList()
@@ -105,9 +113,9 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
         return Pair(hash.digest(hash.digest(utf8Bytes1)).takePrimitive(16),hash.digest(hash.digest(utf8Bytes2)).tailPrimitive(16))
     }
 
-    private data class CryptorageFile(var files: MutableList<String> = ArrayList(),var splitSize: Int = 0,var lastModified: Long = 0) {
+    private data class CryptorageFile(var files: MutableList<String> = ArrayList(),var splitSize: Int = 0,var lastModified: Long = 0,var size: Long = 0) {
         constructor(file: JsonObject):
-            this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!)
+            this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!, file.long("size")!!)
     }
 
     private fun readFiles():MutableMap<String,CryptorageFile> = when {
@@ -160,29 +168,27 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
                     next(null)
                 }
 
-                fun next(overflow: SizeLimitedOutputStream.OverflowError?) {
-                    val cipher= Cipher.getInstance("AES/CBC/Pkcs7Padding")
-                    val (key,iv) = keys.forCrypto()
-                    cipher.init(Cipher.ENCRYPT_MODE,key,iv)
-                    filling=CipherOutputStream(SizeLimitedOutputStream(size,{ me, overflow->
+                private fun next(overflow: SizeLimitedOutputStream.OverflowError?) {
+                    filling=SizeLimitedOutputStream(size,{ me, overflow->
                         closeCurrent(me)
                         next(overflow)
                     },{
                         closeCurrent(it)
-                    }),cipher)
+                    })
 
                     if(overflow!=null){
                         filling!!.write(overflow.buffer)
                     }
                 }
 
-                fun closeCurrent(me:SizeLimitedOutputStream){
+                private fun closeCurrent(me:SizeLimitedOutputStream){
                     val randName= generateRandomName()
-                    source.put(randName).openStream().also {
-                        it.write(me.buffer)
+                    AesEncryptorByteSink(source.put(randName),keys).openStream().also {
+                        it.write(me.buffer,0,me.size())
                         it.close()
                     }
                     file.files.add(randName)
+                    file.size+=me.size()
                 }
 
                 override fun write(p0: Int) {
@@ -195,6 +201,10 @@ class CryptorageImplV1(private val source: FileSource, password: String): Crypto
 
                 override fun write(p0: ByteArray?, p1: Int, p2: Int) {
                     filling!!.write(p0, p1, p2)
+                }
+
+                override fun close() {
+                    filling!!.close()
                 }
             }
             return current!!
