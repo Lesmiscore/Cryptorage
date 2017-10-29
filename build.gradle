@@ -2,7 +2,7 @@ group 'Cryptorage'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.4-3'
+    ext.kotlin_version = '1.1.51'
 
     repositories {
         mavenCentral()
@@ -15,20 +15,22 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'kotlin'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.7
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile 'com.google.guava:guava:23.2-jre'
+    compile 'com.beust:klaxon:0.30'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "1.7"
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "1.7"
 }
