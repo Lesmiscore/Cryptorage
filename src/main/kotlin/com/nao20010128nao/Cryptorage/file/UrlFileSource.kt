@@ -14,7 +14,7 @@ internal class UrlFileSource(private val url: URL): FileSource {
             (it as HttpURLConnection).requestMethod = "HEAD"
         }.let {
             try{
-                it.inputStream.close()/* HEAD mustn't have body so no bytes to read. */
+                it.close()/* HEAD mustn't have body so no bytes to read. */
                 true
             }catch(e: Throwable){
                 false
