@@ -6,9 +6,21 @@ import com.google.common.io.ByteStreams
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.UnsupportedOperationException
-import java.net.URL
+import java.net.*
 
 internal class UrlFileSource(private val url: URL): FileSource {
+    override fun has(name: String): Boolean = 
+        URL(url.protocol,url.host,url.port,"${url.path}/$name?${url.query}").openStream().also {
+            (it as HttpURLConnection).requestMethod = "HEAD"
+        }.let {
+            try{
+                openStream()
+                true
+            }catch(e: Throwable){
+                false
+            }
+        }
+
     /** Deletes file(s) */
     override fun delete(name: String): Unit = throw UnsupportedOperationException("Not writable")
 
