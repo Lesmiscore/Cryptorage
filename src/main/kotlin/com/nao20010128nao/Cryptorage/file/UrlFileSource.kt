@@ -10,11 +10,11 @@ import java.net.*
 
 internal class UrlFileSource(private val url: URL): FileSource {
     override fun has(name: String): Boolean = 
-        URL(url.protocol,url.host,url.port,"${url.path}/$name?${url.query}").openStream().also {
+        URL(url.protocol,url.host,url.port,"${url.path}/$name?${url.query}").openConnection().also {
             (it as HttpURLConnection).requestMethod = "HEAD"
         }.let {
             try{
-                it.close()/* HEAD mustn't have body so no bytes to read. */
+                it.inputStream.close()/* HEAD mustn't have body so no bytes to read. */
                 true
             }catch(e: Throwable){
                 false
