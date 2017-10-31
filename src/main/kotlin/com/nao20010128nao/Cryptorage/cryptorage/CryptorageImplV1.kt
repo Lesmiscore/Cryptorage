@@ -35,7 +35,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
     private val meta:MutableMap<String,String> = readMeta()
 
     /** Lists up file names */
-    override fun list(): Array<String> = files.keys.toTypedArray()
+    override fun list(): Array<String> = files.keys.sorted().toTypedArray()
 
     /** Opens file for reading */
     override fun open(name: String,offset:Int): ByteSource {
