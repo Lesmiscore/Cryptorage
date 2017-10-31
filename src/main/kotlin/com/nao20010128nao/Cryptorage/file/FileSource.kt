@@ -7,8 +7,10 @@ import com.google.common.io.ByteSource
 interface FileSource {
     /** Lists up file names */
     fun list(): Array<String>
-    /** Opens file for reading */
+    /** Opens file for reading with offset and less overhead */
     fun open(name: String,offset:Int =0): ByteSource
+    /** Opens file for reading */
+    fun open(name: String): ByteSource = open(name,0)
     /** Opens file for writing */
     fun put(name: String): ByteSink
     /** Deletes a file */
