@@ -15,6 +15,9 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import java.util.Enumeration
+import java.util.stream.Stream
+
 
 typealias AesKey = ByteArray
 typealias AesIv = ByteArray
@@ -58,3 +61,12 @@ fun FileSource.withV1Encryption(password: String): Cryptorage
         = CryptorageImplV1(this,password)
 fun FileSource.withV1Encryption(keys: AesKeys): Cryptorage
         = CryptorageImplV1(this,keys)
+
+fun <T> Iterator<T>.enumeration(): Enumeration<T> = object : Enumeration<T> {
+    override fun hasMoreElements(): Boolean = hasNext()
+    override fun nextElement(): T = next()
+}
+fun <T> Collection<T>.enumeration(): Enumeration<T>
+        = iterator().enumeration()
+fun <T> Stream<T>.enumeration(): Enumeration<T>
+        = iterator().enumeration()
