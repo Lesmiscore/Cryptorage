@@ -208,10 +208,9 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                         next(next)
                     },{
                         closeCurrent(it)
-                    }).also {
-                        if(overflow!=null){
-                            it.write(overflow.buffer)
-                        }
+                    })
+                    if(overflow!=null){
+                        filling!!.write(overflow.buffer)
                     }
                 }
 
