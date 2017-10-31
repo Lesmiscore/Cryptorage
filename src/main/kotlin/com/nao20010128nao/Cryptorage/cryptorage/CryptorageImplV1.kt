@@ -5,6 +5,7 @@ import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.Cryptorage
+import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
 import java.io.FileNotFoundException
@@ -18,7 +19,6 @@ import kotlin.collections.ArrayList
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys): Cryptorage{
     companion object {
         const val MANIFEST:String = "manifest"
-        const val SPLIT_SIZE:String = "split_size"
         const val SPLIT_SIZE_DEFAULT:Int = 100*1024 /* 100kb */
 
         private fun populateKeys(password: String): AesKeys{
@@ -53,7 +53,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if(has(name)){
             delete(name)
         }
-        val splitSize=(meta[SPLIT_SIZE]?:"$SPLIT_SIZE_DEFAULT").toInt()
+        val splitSize=(meta[META_SPLIT_SIZE]?:"$SPLIT_SIZE_DEFAULT").toInt()
         val file= CryptorageFile(ArrayList(),splitSize,System.currentTimeMillis())
         files[name]=file
         commit()
@@ -113,6 +113,13 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         unused.forEach {
             source.delete(it)
         }
+    }
+
+    override fun meta(key: String): String?
+            = meta[key]
+
+    override fun meta(key: String, value: String) {
+        meta[key]=value
     }
 
     private data class CryptorageFile(var files: MutableList<String> = ArrayList(),var splitSize: Int = 0,var lastModified: Long = 0,var size: Long = 0) {
@@ -201,10 +208,10 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                         next(overflow)
                     },{
                         closeCurrent(it)
-                    })
-
-                    if(overflow!=null){
-                        filling!!.write(overflow.buffer)
+                    }).also {
+                        if(overflow!=null){
+                            it.write(overflow.buffer)
+                        }
                     }
                 }
 
