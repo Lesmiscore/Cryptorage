@@ -203,9 +203,9 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                 }
 
                 private fun next(overflow: SizeLimitedOutputStream.OverflowError?) {
-                    filling=SizeLimitedOutputStream(size,{ me, overflow->
+                    filling=SizeLimitedOutputStream(size,{ me, next->
                         closeCurrent(me)
-                        next(overflow)
+                        next(next)
                     },{
                         closeCurrent(it)
                     }).also {
