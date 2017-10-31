@@ -8,7 +8,7 @@ interface FileSource {
     /** Lists up file names */
     fun list(): Array<String>
     /** Opens file for reading with offset and less overhead */
-    fun open(name: String,offset:Int =0): ByteSource
+    fun open(name: String,offset:Int): ByteSource
     /** Opens file for reading */
     fun open(name: String): ByteSource = open(name,0)
     /** Opens file for writing */
