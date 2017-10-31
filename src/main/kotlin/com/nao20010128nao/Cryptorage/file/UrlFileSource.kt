@@ -10,7 +10,8 @@ import java.net.*
 
 internal class UrlFileSource(private val url: URL): FileSource {
     override fun has(name: String): Boolean = 
-        URL(url.protocol,url.host,url.port,"${url.path}/$name?${url.query}").openConnection().also {
+        URL(url.protocol,url.host,url.port,"${url.path}/$name${if(url.query.isNullOrBlank())"" else "?${url.query}"}")
+                .openConnection().also {
             (it as HttpURLConnection).requestMethod = "HEAD"
         }.let {
             try{
