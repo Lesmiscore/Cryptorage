@@ -54,7 +54,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             delete(name)
         }
         val splitSize=(meta[META_SPLIT_SIZE]?:"$SPLIT_SIZE_DEFAULT").toInt()
-        val file= CryptorageFile(ArrayList(),splitSize,System.currentTimeMillis())
+        val file= CryptorageFile(ArrayList(),splitSize)
         files[name]=file
         commit()
         return ChainedEncryptor(source,splitSize,keys,file,{commit()})
@@ -193,8 +193,9 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                     source.delete(it)
                 }
                 file.files=ArrayList()
-                commit()
             }
+            file.lastModified=System.currentTimeMillis()
+            commit()
             current=object: OutputStream(){
                 var filling: OutputStream? = null
 
