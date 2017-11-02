@@ -19,7 +19,7 @@ import kotlin.collections.ArrayList
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys): Cryptorage{
     companion object {
         const val MANIFEST:String = "manifest"
-        const val SPLIT_SIZE_DEFAULT:Int = 100*1024 /* 100kb */
+        const val SPLIT_SIZE_DEFAULT:Int = 100*1024 /* 100kb */ -16 /* Final block size */
 
         private fun populateKeys(password: String): AesKeys{
             val utf8Bytes1=password.utf8Bytes()
