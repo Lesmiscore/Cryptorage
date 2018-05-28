@@ -7,16 +7,22 @@ import com.google.common.io.ByteSource
 interface FileSource {
     /** Lists up file names */
     fun list(): Array<String>
+
     /** Opens file for reading with offset and less overhead */
-    fun open(name: String,offset:Int): ByteSource
+    fun open(name: String, offset: Int): ByteSource
+
     /** Opens file for reading */
-    fun open(name: String): ByteSource = open(name,0)
+    fun open(name: String): ByteSource = open(name, 0)
+
     /** Opens file for writing */
     fun put(name: String): ByteSink
+
     /** Deletes a file */
     fun delete(name: String)
+
     /** Checks file exist */
     fun has(name: String): Boolean = list().contains(name)
+
     /** Checks Cryptorage is read-only */
     val isReadOnly: Boolean
 }

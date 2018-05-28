@@ -1,11 +1,11 @@
 package com.nao20010128nao.Cryptorage.internal
 
-import java.io.*
+import java.io.OutputStream
 
 class SizeLimitedOutputStream(
         limit: Int,
-        private val next: ((SizeLimitedOutputStream,OverflowError)->Unit)?,
-        private val close: ((SizeLimitedOutputStream)->Unit)?
+        private val next: ((SizeLimitedOutputStream, OverflowError) -> Unit)?,
+        private val close: ((SizeLimitedOutputStream) -> Unit)?
 ) : OutputStream() {
     val buffer: ByteArray
     private var count: Int = 0
@@ -20,7 +20,7 @@ class SizeLimitedOutputStream(
 
     override fun write(b: Int) {
         if (count >= buffer.size) {
-            next?.invoke(this,OverflowError(b.toByte()))
+            next?.invoke(this, OverflowError(b.toByte()))
             return
         }
         buffer[count++] = b.toByte()
@@ -36,10 +36,10 @@ class SizeLimitedOutputStream(
 
         if (count + len > buffer.size) {
             /* I was so confused so use this way */
-            val oldCount=count
-            System.arraycopy(b, off, buffer, count,  buffer.size - count)
+            val oldCount = count
+            System.arraycopy(b, off, buffer, count, buffer.size - count)
             count = buffer.size
-            next?.invoke(this,OverflowError(b,off +(buffer.size - oldCount),len-(buffer.size - oldCount)))
+            next?.invoke(this, OverflowError(b, off + (buffer.size - oldCount), len - (buffer.size - oldCount)))
             return
         }
 
@@ -55,8 +55,8 @@ class SizeLimitedOutputStream(
         close?.invoke(this)
     }
 
-    class OverflowError(val buffer: ByteArray): Throwable(){
-        constructor(a:Byte):this(byteArrayOf(a))
-        constructor(b: ByteArray, off: Int, len: Int):this(b.crop(off,len))
+    class OverflowError(val buffer: ByteArray) : Throwable() {
+        constructor(a: Byte) : this(byteArrayOf(a))
+        constructor(b: ByteArray, off: Int, len: Int) : this(b.crop(off, len))
     }
 }
