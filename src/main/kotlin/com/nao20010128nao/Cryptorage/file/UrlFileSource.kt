@@ -3,6 +3,8 @@ package com.nao20010128nao.Cryptorage.file
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
+import com.nao20010128nao.Cryptorage.internal.readOnly
+import com.nao20010128nao.Cryptorage.internal.unsupported
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.UnsupportedOperationException
@@ -24,28 +26,23 @@ internal class UrlFileSource(private val url: URL) : FileSource {
                     }
 
     /** Deletes file(s) */
-    override fun delete(name: String): Unit = throw UnsupportedOperationException("Not writable")
+    override fun delete(name: String): Unit = readOnly("FileSource")
 
     /** Lists up file names */
-    override fun list(): Array<String> = throw UnsupportedOperationException("Not writable")
+    override fun list(): Array<String> = unsupported("FileSource","list")
 
     /** Opens file for reading */
     override fun open(name: String, offset: Int): ByteSource = UrlByteSource(url, name, offset)
 
     /** Opens file for writing */
-    override fun put(name: String): ByteSink = UrlByteSink()
+    override fun put(name: String): ByteSink = readOnly("FileSource")
 
     /** Checks Cryptorage is read-only */
-    override val isReadOnly: Boolean
-        get() = true
+    override val isReadOnly: Boolean = true
 
     private class UrlByteSource(private val url: URL, private val relative: String, private val offset: Int) : ByteSource() {
         override fun openStream(): InputStream = URL(url.protocol, url.host, url.port, "${url.path}/$relative?${url.query}").openStream().also {
             ByteStreams.skipFully(it, offset.toLong())
         }
-    }
-
-    private class UrlByteSink : ByteSink() {
-        override fun openStream(): OutputStream = throw UnsupportedOperationException("Not writable")
     }
 }

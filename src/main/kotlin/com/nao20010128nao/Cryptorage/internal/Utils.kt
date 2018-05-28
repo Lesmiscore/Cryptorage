@@ -1,8 +1,11 @@
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.nao20010128nao.Cryptorage.internal
 
 import com.google.common.io.ByteSource
 import com.google.common.io.CharSource
 import com.nao20010128nao.Cryptorage.Cryptorage
+import com.nao20010128nao.Cryptorage.cryptorage.CombinedCryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
 import com.nao20010128nao.Cryptorage.file.DirectoryFileSource
 import com.nao20010128nao.Cryptorage.file.FileSource
@@ -67,3 +70,15 @@ fun <T> Iterator<T>.enumeration(): Enumeration<T> = object : Enumeration<T> {
 
 fun <T> Collection<T>.enumeration(): Enumeration<T> = iterator().enumeration()
 fun <T> Stream<T>.enumeration(): Enumeration<T> = iterator().enumeration()
+
+fun List<Cryptorage>.combine(): Cryptorage = CombinedCryptorage(this)
+operator fun Cryptorage.plus(other: Cryptorage): Cryptorage = CombinedCryptorage(this, other)
+
+internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
+internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
+internal inline fun <T, R> Iterable<T>.firstNonNull(func: (T) -> R?): R? {
+    for (i in this) {
+        return func(i) ?: continue
+    }
+    return null
+}
