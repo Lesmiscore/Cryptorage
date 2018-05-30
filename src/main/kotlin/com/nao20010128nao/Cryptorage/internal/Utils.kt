@@ -7,10 +7,8 @@ import com.google.common.io.CharSource
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CombinedCryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
-import com.nao20010128nao.Cryptorage.file.DirectoryFileSource
-import com.nao20010128nao.Cryptorage.file.FileSource
-import com.nao20010128nao.Cryptorage.file.MemoryFileSource
-import com.nao20010128nao.Cryptorage.file.UrlFileSource
+import com.nao20010128nao.Cryptorage.cryptorage.ReadOnlyCryptorage
+import com.nao20010128nao.Cryptorage.file.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URL
@@ -73,6 +71,9 @@ fun <T> Stream<T>.enumeration(): Enumeration<T> = iterator().enumeration()
 
 fun List<Cryptorage>.combine(): Cryptorage = CombinedCryptorage(this)
 operator fun Cryptorage.plus(other: Cryptorage): Cryptorage = CombinedCryptorage(this, other)
+
+fun Cryptorage.asReadOnlyCryptorage(): Cryptorage = ReadOnlyCryptorage(this)
+fun FileSource.asRealOnlyFileSource(): FileSource = ReadOnlyFileSource(this)
 
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
 internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
