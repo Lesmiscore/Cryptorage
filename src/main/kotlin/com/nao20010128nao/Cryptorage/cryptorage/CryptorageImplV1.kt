@@ -155,12 +155,12 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
     }
 
     private class ChainedDecryptor(private val source: FileSource, private val keys: AesKeys, private val files: List<String>, private val bytesToSkip: Int = 0) : ByteSource() {
-        override fun openStream(): InputStream = SequenceInputStream(
+        override fun openStream(): InputStream = ConcatenatedInputStream(
                 files.asSequence()
                         .map { source.open(it) }
                         .map { AesDecryptorByteSource(it, keys) }
                         .map { it.openStream() }
-                        .enumeration()
+                        .iterator()
         ).also {
             ByteStreams.skipFully(it, bytesToSkip.toLong())
         }

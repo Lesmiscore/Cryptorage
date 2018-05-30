@@ -26,15 +26,7 @@ internal inline fun ByteSource.asCharSource(): CharSource = this.asCharSource(St
 
 /* Caution: this has no grantee not to be duplicate */
 internal inline fun generateRandomName(): String =
-        UUID.randomUUID().toString().replace("-", "") +
-                UUID.randomUUID().toString().replace("-", "")
-
-internal inline fun <T> Sequence<T>.enumeration(): Enumeration<T> = iterator().enumeration()
-
-internal inline fun <T> Iterator<T>.enumeration(): Enumeration<T> = object : Enumeration<T> {
-    override fun hasMoreElements(): Boolean = hasNext()
-    override fun nextElement(): T = next()
-}
+        "${UUID.randomUUID()}${UUID.randomUUID()}".replace("-", "")
 
 
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")

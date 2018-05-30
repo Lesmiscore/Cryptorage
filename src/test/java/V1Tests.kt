@@ -77,18 +77,6 @@ class V1Tests {
     }
 
     @Test
-    fun testOverflow() {
-        val payload = "It's a small world"
-        val first10 = "It's a sma"
-        val remain8 = "ll world"
-        val stream = SizeLimitedOutputStream(10, { a, b ->
-            assertTrue(Arrays.equals(a.buffer, first10.toByteArray()))
-            assertTrue(Arrays.equals(b.buffer, remain8.toByteArray()))
-        }, null)
-        stream.write(payload.toByteArray())
-    }
-
-    @Test
     fun testOverWrite() {
         val cryptorage = newMemoryFileSource().openForTest()
         val sr = SecureRandom()
