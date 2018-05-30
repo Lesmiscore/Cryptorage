@@ -102,11 +102,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
     /** Removes unused files */
     override fun gc() {
         val ls = source.list().asList()
-        val managed: MutableList<String> = arrayListOf()
-        index.files.forEach { _, file ->
-            managed.addAll(file.files)
-        }
-        val unused = ls - managed - MANIFEST
+        val unused = ls - index.files.flatMap { it.value.files } - MANIFEST
         unused.forEach {
             source.delete(it)
         }
