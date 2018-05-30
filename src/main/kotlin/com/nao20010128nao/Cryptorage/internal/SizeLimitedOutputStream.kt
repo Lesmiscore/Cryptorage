@@ -2,7 +2,7 @@ package com.nao20010128nao.Cryptorage.internal
 
 import java.io.OutputStream
 
-class SizeLimitedOutputStream(
+internal class SizeLimitedOutputStream(
         limit: Int,
         private val next: ((SizeLimitedOutputStream, OverflowError) -> Unit)?,
         private val close: ((SizeLimitedOutputStream) -> Unit)?
