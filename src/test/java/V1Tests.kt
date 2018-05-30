@@ -1,17 +1,20 @@
-import com.google.common.io.*
-import com.nao20010128nao.Cryptorage.*
-import com.nao20010128nao.Cryptorage.cryptorage.*
-import com.nao20010128nao.Cryptorage.file.*
-import com.nao20010128nao.Cryptorage.internal.*
-import junit.framework.*
-
-import java.io.*
-import java.security.*
+import com.google.common.io.ByteStreams
+import com.nao20010128nao.Cryptorage.Cryptorage
+import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.internal.SizeLimitedOutputStream
+import com.nao20010128nao.Cryptorage.newMemoryFileSource
+import com.nao20010128nao.Cryptorage.withV1Encryption
+import org.junit.Test
+import java.security.MessageDigest
+import java.security.SecureRandom
 import java.util.*
 
-class Tests : TestCase() {
+class V1Tests {
+    private fun FileSource.openForTest(): Cryptorage = withV1Encryption("test")
+
+    @Test
     fun testSimpleWriting() {
-        val cryptorage = newMemoryFileSource().withV1Encryption("test")
+        val cryptorage = newMemoryFileSource().openForTest()
         val sr = SecureRandom()
         val test = ByteArray(1024 * 1024)
         sr.nextBytes(test)
@@ -29,8 +32,9 @@ class Tests : TestCase() {
         assertEquals(hashed, md.digest(read))
     }
 
+    @Test
     fun testSimpleWriting2() {
-        val cryptorage = newMemoryFileSource().withV1Encryption("test")
+        val cryptorage = newMemoryFileSource().openForTest()
         val payload = "It's a small world"
 
         val test = payload.toByteArray()
@@ -58,8 +62,9 @@ class Tests : TestCase() {
         `is`.close()
     }
 
+    @Test
     fun testWriteSize() {
-        val cryptorage = newMemoryFileSource().withV1Encryption("test")
+        val cryptorage = newMemoryFileSource().openForTest()
         val payload = "It's a small world"
 
         val test = payload.toByteArray()
@@ -68,22 +73,24 @@ class Tests : TestCase() {
             dest.write(test)
         dest.close()
 
-        TestCase.assertEquals((payload.length * 10000).toLong(), cryptorage.size("test"))
+        assertEquals((payload.length * 10000).toLong(), cryptorage.size("test"))
     }
 
+    @Test
     fun testOverflow() {
         val payload = "It's a small world"
         val first10 = "It's a sma"
         val remain8 = "ll world"
         val stream = SizeLimitedOutputStream(10, { a, b ->
-            TestCase.assertTrue(Arrays.equals(a.buffer, first10.toByteArray()))
-            TestCase.assertTrue(Arrays.equals(b.buffer, remain8.toByteArray()))
-        },null)
+            assertTrue(Arrays.equals(a.buffer, first10.toByteArray()))
+            assertTrue(Arrays.equals(b.buffer, remain8.toByteArray()))
+        }, null)
         stream.write(payload.toByteArray())
     }
 
+    @Test
     fun testOverWrite() {
-        val cryptorage = newMemoryFileSource().withV1Encryption("test")
+        val cryptorage = newMemoryFileSource().openForTest()
         val sr = SecureRandom()
         val test = ByteArray(1024 * 1024)
         sr.nextBytes(test)
@@ -105,8 +112,9 @@ class Tests : TestCase() {
         assertEquals(hashed, md.digest(read))
     }
 
+    @Test
     fun testSkip() {
-        val cryptorage = newMemoryFileSource().withV1Encryption("test")
+        val cryptorage = newMemoryFileSource().openForTest()
         val sr = SecureRandom()
         val test = ByteArray(1024 * 1024)
         sr.nextBytes(test)
@@ -124,9 +132,10 @@ class Tests : TestCase() {
         assertEquals(hashed, md.digest(read))
     }
 
+    @Test
     fun testReopen() {
         val memory = newMemoryFileSource()
-        val cryptorage = memory.withV1Encryption("test")
+        val cryptorage = memory.openForTest()
         val payload = "It's a small world"
 
         val test = payload.toByteArray()
@@ -137,19 +146,23 @@ class Tests : TestCase() {
         dest.write(test)
         dest.write(test)
         dest.close()
-        TestCase.assertTrue(cryptorage.list().contains("file1"))
-        TestCase.assertTrue(cryptorage.list().contains("file2"))
+        assertTrue(cryptorage.list().contains("file1"))
+        assertTrue(cryptorage.list().contains("file2"))
 
-        val cryptorageReopen = memory.withV1Encryption("test")
-        TestCase.assertTrue(cryptorageReopen.list().contains("file1"))
-        TestCase.assertTrue(cryptorageReopen.list().contains("file2"))
+        val cryptorageReopen = memory.openForTest()
+        assertTrue(cryptorageReopen.list().contains("file1"))
+        assertTrue(cryptorageReopen.list().contains("file2"))
     }
 
-    fun assertEquals(a:ByteArray,b:ByteArray):Nothing?{
-        val min= minOf(a.size,b.size)
-        (0 until min)
-                .filter { a[it]!=b[it] }
-                .forEach { throw AssertionError(it.toString()) }
-        return null
+    fun assertEquals(a: ByteArray, b: ByteArray) {
+        require(Arrays.equals(a, b))
+    }
+
+    fun assertEquals(a: Long, b: Long) {
+        require(a == b)
+    }
+
+    fun assertTrue(value: Boolean) {
+        require(value)
     }
 }
