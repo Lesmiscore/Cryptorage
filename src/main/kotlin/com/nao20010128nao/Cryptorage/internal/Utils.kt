@@ -75,6 +75,18 @@ operator fun Cryptorage.plus(other: Cryptorage): Cryptorage = CombinedCryptorage
 fun Cryptorage.asReadOnlyCryptorage(): Cryptorage = ReadOnlyCryptorage(this)
 fun FileSource.asRealOnlyFileSource(): FileSource = ReadOnlyFileSource(this)
 
+fun Cryptorage.copyTo(to: Cryptorage): CopyResult {
+    require(!to.isReadOnly)
+    val files = list()
+    var totalBytes: Long = 0
+    files.forEach {
+        totalBytes += open(it).copyTo(to.put(it))
+    }
+    return CopyResult(files.size.toLong(), totalBytes)
+}
+
+data class CopyResult(val files: Long, val totalBytes: Long)
+
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
 internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
 internal inline fun <T, R> Iterable<T>.firstNonNull(func: (T) -> R?): R? {
