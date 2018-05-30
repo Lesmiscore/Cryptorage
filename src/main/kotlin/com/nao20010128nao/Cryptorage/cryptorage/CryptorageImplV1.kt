@@ -172,7 +172,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             private val bytesToSkip: Int = 0
     ) : ByteSource() {
         override fun openStream(): InputStream = SequenceInputStream(
-                files.stream()
+                files.asSequence()
                         .map { source.open(it) }
                         .map { AesDecryptorByteSource(it, keys) }
                         .map { it.openStream() }

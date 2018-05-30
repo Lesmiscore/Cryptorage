@@ -29,8 +29,7 @@ internal inline fun generateRandomName(): String =
         UUID.randomUUID().toString().replace("-", "") +
                 UUID.randomUUID().toString().replace("-", "")
 
-internal inline fun <T> Collection<T>.enumeration(): Enumeration<T> = iterator().enumeration()
-internal inline fun <T> Stream<T>.enumeration(): Enumeration<T> = iterator().enumeration()
+internal inline fun <T> Sequence<T>.enumeration(): Enumeration<T> = iterator().enumeration()
 
 internal inline fun <T> Iterator<T>.enumeration(): Enumeration<T> = object : Enumeration<T> {
     override fun hasMoreElements(): Boolean = hasNext()
