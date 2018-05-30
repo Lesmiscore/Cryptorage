@@ -7,7 +7,7 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
 internal class MemoryFileSource : FileSource {
-    val map: MutableMap<String, ByteArray> = HashMap()
+    private val map: MutableMap<String, ByteArray> = HashMap()
 
     /** Lists up file names */
     override fun list(): Array<String> = map.keys.toTypedArray()
@@ -32,6 +32,5 @@ internal class MemoryFileSource : FileSource {
     }
 
     /** Checks Cryptorage is read-only */
-    override val isReadOnly: Boolean
-        get() = false
+    override val isReadOnly: Boolean = false
 }

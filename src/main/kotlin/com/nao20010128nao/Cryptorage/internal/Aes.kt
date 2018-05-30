@@ -8,7 +8,7 @@ import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 
-class AesDecryptorByteSource(private var source: ByteSource, private var keys: AesKeys) : ByteSource() {
+internal class AesDecryptorByteSource(private val source: ByteSource, private val keys: AesKeys) : ByteSource() {
     override fun openStream(): InputStream {
         val cipher = Cipher.getInstance("AES/CBC/Pkcs5Padding")
         val (key, iv) = keys.forCrypto()
@@ -17,7 +17,7 @@ class AesDecryptorByteSource(private var source: ByteSource, private var keys: A
     }
 }
 
-class AesEncryptorByteSink(private var source: ByteSink, private var keys: AesKeys) : ByteSink() {
+internal class AesEncryptorByteSink(private val source: ByteSink, private val keys: AesKeys) : ByteSink() {
     override fun openStream(): OutputStream {
         val cipher = Cipher.getInstance("AES/CBC/Pkcs5Padding")
         val (key, iv) = keys.forCrypto()

@@ -164,7 +164,12 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         AesEncryptorByteSink(source.put("manifest"), keys).write(root.toJsonString(false).utf8Bytes())
     }
 
-    private class ChainedDecryptor(private var source: FileSource, private var keys: AesKeys, private var files: List<String>, private var bytesToSkip: Int = 0) : ByteSource() {
+    private class ChainedDecryptor(
+            private val source: FileSource,
+            private val keys: AesKeys,
+            private val files: List<String>,
+            private val bytesToSkip: Int = 0
+    ) : ByteSource() {
         override fun openStream(): InputStream = SequenceInputStream(
                 files.stream()
                         .map { source.open(it) }
@@ -177,10 +182,10 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
     }
 
     private class ChainedEncryptor(
-            private var source: FileSource,
+            private val source: FileSource,
             private val size: Int,
-            private var keys: AesKeys,
-            private var file: CryptorageFile,
+            private val keys: AesKeys,
+            private val file: CryptorageFile,
             private val commit: () -> Unit
     ) : ByteSink() {
         var current: OutputStream? = null

@@ -24,7 +24,7 @@ internal class DirectoryFileSource(private val dir: File) : FileSource {
 
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean
-        get() = !dir.canRead()
+        get() = !dir.canWrite()
 
     private class FileByteSource(private val file: File, private val offset: Int) : ByteSource() {
         override fun openStream(): InputStream = file.inputStream().also {
