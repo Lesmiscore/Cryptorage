@@ -53,7 +53,7 @@ class V1Tests {
                 error = e
             }
 
-            println(i.toString() + ": " + String(test))
+            println("$i: ${test.toString(utf8)}")
             if (error != null) {
                 throw error
             }
@@ -152,17 +152,5 @@ class V1Tests {
         val cryptorageReopen = memory.openForTest()
         assertTrue(cryptorageReopen.list().contains("file1"))
         assertTrue(cryptorageReopen.list().contains("file2"))
-    }
-
-    fun assertEquals(a: ByteArray, b: ByteArray) {
-        require(Arrays.equals(a, b))
-    }
-
-    fun assertEquals(a: Long, b: Long) {
-        require(a == b)
-    }
-
-    fun assertTrue(value: Boolean) {
-        require(value)
     }
 }

@@ -3,6 +3,7 @@ package com.nao20010128nao.Cryptorage.internal
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.AesKeys
+import com.nao20010128nao.Cryptorage.forCrypto
 import java.io.InputStream
 import java.io.OutputStream
 import javax.crypto.Cipher
