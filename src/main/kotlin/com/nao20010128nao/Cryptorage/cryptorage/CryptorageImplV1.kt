@@ -14,8 +14,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.SequenceInputStream
 import java.security.MessageDigest
-import java.util.*
-import kotlin.collections.ArrayList
 
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
     companion object {
@@ -32,18 +30,17 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
 
     constructor(source: FileSource, password: String) : this(source, populateKeys(password))
 
-    private val files: MutableMap<String, CryptorageFile> = readFiles()
-    private val meta: MutableMap<String, String> = readMeta()
+    private val index: Index = readIndex()
 
     /** Lists up file names */
-    override fun list(): Array<String> = files.keys.sorted().toTypedArray()
+    override fun list(): Array<String> = index.files.keys.sorted().toTypedArray()
 
     /** Opens file for reading */
     override fun open(name: String, offset: Int): ByteSource {
         if (!has(name)) {
             throw FileNotFoundException(name)
         }
-        val file = files[name]!!
+        val file = index.files[name]!!
         val indexOffset: Int = offset / file.splitSize
         val fileOffset: Int = offset % file.splitSize
         return ChainedDecryptor(source, keys, file.files.drop(indexOffset), fileOffset)
@@ -54,9 +51,9 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if (has(name)) {
             delete(name)
         }
-        val splitSize = (meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
+        val splitSize = (index.meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
         val file = CryptorageFile(ArrayList(), splitSize)
-        files[name] = file
+        index.files[name] = file
         commit()
         return ChainedEncryptor(source, splitSize, keys, file, { commit() })
     }
@@ -69,7 +66,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if (has(to)) {
             delete(to)
         }
-        files[to] = files[from]!!
+        index.files[to] = index.files[from]!!
         commit()
     }
 
@@ -78,17 +75,17 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if (!has(name)) {
             return
         }
-        val removal = files[name]!!.files
+        val removal = index.files[name]!!.files
         removal.forEach {
             source.delete(it)
         }
-        files.remove(name)
+        index.files.remove(name)
         commit()
     }
 
     /** Checks last modified date and time */
     override fun lastModified(name: String): Long = when {
-        has(name) -> files[name]!!.lastModified
+        has(name) -> index.files[name]!!.lastModified
         else -> 0
     }
 
@@ -100,14 +97,14 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if (!has(name)) {
             throw FileNotFoundException(name)
         }
-        return files[name]!!.size
+        return index.files[name]!!.size
     }
 
     /** Removes unused files */
     override fun gc() {
-        val ls = source.list().toList()
+        val ls = source.list().asList()
         val managed: MutableList<String> = arrayListOf()
-        files.forEach { _, file ->
+        index.files.forEach { _, file ->
             managed.addAll(file.files)
         }
         val unused = ls - managed - MANIFEST
@@ -116,61 +113,48 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         }
     }
 
-    override fun meta(key: String): String? = meta[key]
+    override fun meta(key: String): String? = index.meta[key]
 
     override fun meta(key: String, value: String) {
-        meta[key] = value
+        index.meta[key] = value
     }
+
+
+    private fun readIndex(): Index {
+        if (!source.has(MANIFEST))
+            return Index(hashMapOf(), hashMapOf())
+        val data = (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
+        val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
+        val meta = data.obj("meta")!!.mapValues { "${it.value}" }
+        return Index(files.toMutableMap(), meta.toMutableMap())
+    }
+
+    private fun commit() {
+        val root = JsonObject()
+        root["files"] = index.files.mapValues { it.value.toJsonMap() }
+        root["meta"] = index.meta
+        AesEncryptorByteSink(source.put("manifest"), keys)
+                .write(root.toJsonString(false).utf8Bytes())
+    }
+
+    private fun CryptorageFile.toJsonMap(): Map<String, Any> = mapOf(
+            "files" to files,
+            "splitSize" to splitSize,
+            "lastModified" to lastModified,
+            "size" to size
+    )
+
+    private data class Index(
+            val files: MutableMap<String, CryptorageFile>,
+            val meta: MutableMap<String, String>
+    )
 
     private data class CryptorageFile(var files: MutableList<String> = ArrayList(), var splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
         constructor(file: JsonObject) :
                 this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!, file.long("size")!!)
     }
 
-    private fun readFiles(): MutableMap<String, CryptorageFile> = when {
-        source.has(MANIFEST) -> {
-            val map: MutableMap<String, CryptorageFile> = HashMap()
-            (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
-                    .obj("files")?.forEach { name, file ->
-                        map[name] = CryptorageFile(file as JsonObject)
-                    }
-            map
-        }
-        else -> HashMap()
-    }
-
-    private fun readMeta(): MutableMap<String, String> = when {
-        source.has(MANIFEST) -> {
-            val map: MutableMap<String, String> = HashMap()
-            (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
-                    .obj("meta")?.forEach { name, value ->
-                        map[name] = "$value"
-                    }
-            map
-        }
-        else -> HashMap()
-    }
-
-    private fun commit() {
-        val root = JsonObject()
-        root["files"] = files.mapValues {
-            mapOf(
-                    "files" to it.value.files,
-                    "splitSize" to it.value.splitSize,
-                    "lastModified" to it.value.lastModified,
-                    "size" to it.value.size
-            )
-        }
-        root["meta"] = meta
-        AesEncryptorByteSink(source.put("manifest"), keys).write(root.toJsonString(false).utf8Bytes())
-    }
-
-    private class ChainedDecryptor(
-            private val source: FileSource,
-            private val keys: AesKeys,
-            private val files: List<String>,
-            private val bytesToSkip: Int = 0
-    ) : ByteSource() {
+    private class ChainedDecryptor(private val source: FileSource, private val keys: AesKeys, private val files: List<String>, private val bytesToSkip: Int = 0) : ByteSource() {
         override fun openStream(): InputStream = SequenceInputStream(
                 files.asSequence()
                         .map { source.open(it) }
@@ -182,13 +166,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         }
     }
 
-    private class ChainedEncryptor(
-            private val source: FileSource,
-            private val size: Int,
-            private val keys: AesKeys,
-            private val file: CryptorageFile,
-            private val commit: () -> Unit
-    ) : ByteSink() {
+    private class ChainedEncryptor(private val source: FileSource, private val size: Int, private val keys: AesKeys, private val file: CryptorageFile, private val commit: () -> Unit) : ByteSink() {
         var current: OutputStream? = null
 
         override fun openStream(): OutputStream {
