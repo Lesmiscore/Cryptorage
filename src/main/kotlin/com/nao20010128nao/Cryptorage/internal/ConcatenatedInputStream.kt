@@ -11,59 +11,50 @@ internal class ConcatenatedInputStream(private val e: Iterator<InputStream>) : I
 
     init {
         try {
-            this.nextStream()
-        } catch (var3: IOException) {
+            nextStream()
+        } catch (e: IOException) {
             throw Error("panic")
         }
     }
 
     private fun nextStream() {
-        if (this.current != null) {
-            this.current!!.close()
-        }
+        current?.close()
 
-        if (this.e.hasNext()) {
-            this.current = this.e.next()
-            if (this.current == null) {
-                throw NullPointerException()
-            }
+        current = if (e.hasNext()) {
+            e.next()
         } else {
-            this.current = null
+            null
         }
     }
 
-    override fun available(): Int {
-        return if (this.current == null) 0 else this.current!!.available()
-    }
+    override fun available(): Int = if (current != null) current!!.available() else 0
 
     override fun read(): Int {
-        while (this.current != null) {
-            val var1 = this.current!!.read()
-            if (var1 != -1) {
-                return var1
+        while (current != null) {
+            val r = current!!.read()
+            if (r != -1) {
+                return r
             }
-            this.nextStream()
+            nextStream()
         }
         return -1
     }
 
     override fun read(buf: ByteArray, off: Int, len: Int): Int {
-        if (this.current == null) {
+        if (current == null) {
             return -1
         } else if (off >= 0 && len >= 0 && len <= buf.size - off) {
-            if (len == 0) {
-                return 0
-            } else {
+            if (len != 0) {
                 do {
-                    val var4 = this.current!!.read(buf, off, len)
-                    if (var4 > 0) {
-                        return var4
+                    val r = current!!.read(buf, off, len)
+                    if (r > 0) {
+                        return r
                     }
-
-                    this.nextStream()
-                } while (this.current != null)
-
+                    nextStream()
+                } while (current != null)
                 return -1
+            } else {
+                return 0
             }
         } else {
             throw IndexOutOfBoundsException()
@@ -72,7 +63,7 @@ internal class ConcatenatedInputStream(private val e: Iterator<InputStream>) : I
 
     override fun close() {
         do {
-            this.nextStream()
-        } while (this.current != null)
+            nextStream()
+        } while (current != null)
     }
 }

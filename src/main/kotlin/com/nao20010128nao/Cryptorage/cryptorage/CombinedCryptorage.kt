@@ -13,7 +13,7 @@ internal class CombinedCryptorage(val cryptorages: List<Cryptorage>) : Cryptorag
     override fun list(): Array<String> = cryptorages.flatMap { it.list().asList() }.toTypedArray()
     override fun open(name: String, offset: Int): ByteSource = cryptorages.firstNonNull { it.open(name, offset) }!!
     override fun open(name: String): ByteSource = cryptorages.firstNonNull { it.open(name) }!!
-    override fun has(name: String): Boolean = cryptorages.firstOrNull { it.has(name) }?.let { true } == true
+    override fun has(name: String): Boolean = cryptorages.firstNonNull { it.has(name) } == true
     override fun lastModified(name: String): Long = cryptorages.firstNonNull { it.lastModified(name) }!!
     override fun size(name: String): Long = cryptorages.firstNonNull { it.size(name) }!!
     override fun meta(key: String): String? = cryptorages.firstNonNull { it.meta(key) }

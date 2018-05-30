@@ -12,7 +12,6 @@ import com.nao20010128nao.Cryptorage.internal.*
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.io.OutputStream
-import java.io.SequenceInputStream
 import java.security.MessageDigest
 
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
@@ -186,7 +185,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                     next(null)
                 }
 
-                private fun next(overflow: SizeLimitedOutputStream.OverflowError?) {
+                private fun next(overflow: SizeLimitedOutputStream.Overflow?) {
                     filling = SizeLimitedOutputStream(size, { me, next ->
                         closeCurrent(me)
                         next(next)

@@ -4,7 +4,7 @@ import java.io.OutputStream
 
 internal class SizeLimitedOutputStream(
         limit: Int,
-        private val next: ((SizeLimitedOutputStream, OverflowError) -> Unit)?,
+        private val next: ((SizeLimitedOutputStream, Overflow) -> Unit)?,
         private val close: ((SizeLimitedOutputStream) -> Unit)?
 ) : OutputStream() {
     val buffer: ByteArray
@@ -14,13 +14,13 @@ internal class SizeLimitedOutputStream(
         if (limit < 0) {
             throw IllegalArgumentException("Invalid capacity/limit")
         }
-        this.buffer = ByteArray(limit)
-        this.count = 0
+        buffer = ByteArray(limit)
+        count = 0
     }
 
     override fun write(b: Int) {
         if (count >= buffer.size) {
-            next?.invoke(this, OverflowError(b.toByte()))
+            next?.invoke(this, Overflow(b.toByte()))
             return
         }
         buffer[count++] = b.toByte()
@@ -39,7 +39,7 @@ internal class SizeLimitedOutputStream(
             val oldCount = count
             System.arraycopy(b, off, buffer, count, buffer.size - count)
             count = buffer.size
-            next?.invoke(this, OverflowError(b, off + (buffer.size - oldCount), len - (buffer.size - oldCount)))
+            next?.invoke(this, Overflow(b, off + (buffer.size - oldCount), len - (buffer.size - oldCount)))
             return
         }
 
@@ -47,15 +47,13 @@ internal class SizeLimitedOutputStream(
         count += len
     }
 
-    fun size(): Int {
-        return count
-    }
+    fun size(): Int = count
 
     override fun close() {
         close?.invoke(this)
     }
 
-    class OverflowError(val buffer: ByteArray) : Throwable() {
+    class Overflow(val buffer: ByteArray) {
         constructor(a: Byte) : this(byteArrayOf(a))
         constructor(b: ByteArray, off: Int, len: Int) : this(b.crop(off, len))
     }
