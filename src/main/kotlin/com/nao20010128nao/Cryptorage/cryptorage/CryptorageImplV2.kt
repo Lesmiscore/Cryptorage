@@ -14,10 +14,10 @@ import java.security.SecureRandom
 
 internal class CryptorageImplV2(private val source: FileSource, password: String) : Cryptorage {
     companion object {
-        const val MANIFEST: String = "manifest"
+        const val NONCE_MANIFEST = 130625071L
         const val SPLIT_SIZE_DEFAULT: Int = 100 * 1024 /* 100kb */ - 16 /* Final block size */
 
-        internal fun deriveKeys(pwSha: ByteArray, nonce: Long = MANIFEST.hashCode().toLong()): AesKeys {
+        internal fun deriveKeys(pwSha: ByteArray, nonce: Long = NONCE_MANIFEST): AesKeys {
             val ec = ECKey.fromPrivate(pwSha)
             val ecPublic = ec.pubKeyPoint
             val ecMultiplied = ecPublic.multiply(nonce.toBigInteger())
@@ -116,7 +116,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     /** Removes unused files */
     override fun gc() {
         val ls = source.list().asList()
-        val unused = ls - index.files.flatMap { it.value.files } - MANIFEST
+        val unused = ls - index.files.flatMap { it.value.files } - manifestFilenameIterator().takeWhile { source.has(it) }
         unused.forEach {
             source.delete(it)
         }
@@ -153,7 +153,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
         root["files"] = index.files.mapValues { it.value.toJsonMap() }
         root["meta"] = index.meta
         val iter = manifestFilenameIterator().iterator()
-        val dummyFile = CryptorageFile(nonce = MANIFEST.hashCode().toLong())
+        val dummyFile = CryptorageFile(nonce = NONCE_MANIFEST)
         ChainedEncryptor(source, splitSize(), keysManifest, dummyFile, {}, { iter.next() })
                 .write(root.toJsonString(false).utf8Bytes())
     }
