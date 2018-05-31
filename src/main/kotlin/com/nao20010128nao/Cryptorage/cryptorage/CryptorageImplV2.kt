@@ -12,13 +12,12 @@ import org.bitcoinj.core.ECKey
 import java.io.FileNotFoundException
 import java.security.SecureRandom
 
-internal class CryptorageImplV2(private val source: FileSource, private val password: String) : Cryptorage {
+internal class CryptorageImplV2(private val source: FileSource, password: String) : Cryptorage {
     companion object {
         const val MANIFEST: String = "manifest"
         const val SPLIT_SIZE_DEFAULT: Int = 100 * 1024 /* 100kb */ - 16 /* Final block size */
 
-        internal fun deriveKeys(password: String, nonce: Long = MANIFEST.hashCode().toLong()): AesKeys {
-            val pwSha = password.utf8Bytes().digest()
+        internal fun deriveKeys(pwSha: ByteArray, nonce: Long = MANIFEST.hashCode().toLong()): AesKeys {
             val ec = ECKey.fromPrivate(pwSha)
             val ecPublic = ec.pubKeyPoint
             val ecMultiplied = ecPublic.multiply(nonce.toBigInteger())
@@ -27,8 +26,7 @@ internal class CryptorageImplV2(private val source: FileSource, private val pass
             return compressedDigest.leading(16) to compressedDigest.trailing(16)
         }
 
-        internal fun deriveManifestFilename(password: String, index: Long): String {
-            val pwSha = password.utf8Bytes().digest()
+        internal fun deriveManifestFilename(pwSha: ByteArray, index: Long): String {
             val indexSha = "$index".utf8Bytes().digest()
             val ec = ECKey.fromPrivate(pwSha)
             val ecPublic = ec.pubKeyPoint
@@ -40,7 +38,8 @@ internal class CryptorageImplV2(private val source: FileSource, private val pass
         }
     }
 
-    private val keysManifest = deriveKeys(password)
+    private val pwSha = password.utf8Bytes().digest()
+    private val keysManifest = deriveKeys(pwSha)
     private val random = SecureRandom()
 
     private val index: Index = readIndex()
@@ -56,7 +55,7 @@ internal class CryptorageImplV2(private val source: FileSource, private val pass
         val file = index.files[name]!!
         val indexOffset: Int = offset / file.splitSize
         val fileOffset: Int = offset % file.splitSize
-        return ChainedDecryptor(source, deriveKeys(password, file.nonce), file.files.drop(indexOffset), fileOffset)
+        return ChainedDecryptor(source, deriveKeys(pwSha, file.nonce), file.files.drop(indexOffset), fileOffset)
     }
 
     /** Opens file for writing */
@@ -69,7 +68,7 @@ internal class CryptorageImplV2(private val source: FileSource, private val pass
         val file = CryptorageFile(splitSize = splitSize, nonce = nonce)
         index.files[name] = file
         commit()
-        return ChainedEncryptor(source, splitSize, deriveKeys(password, nonce), file, { commit() })
+        return ChainedEncryptor(source, splitSize, deriveKeys(pwSha, nonce), file, { commit() })
     }
 
     /** Moves file */
@@ -131,14 +130,14 @@ internal class CryptorageImplV2(private val source: FileSource, private val pass
 
     private fun splitSize(): Int = (index.meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
 
-    private fun manifestFilenameIterator() = generateSequence(0) { it + 1 }.map { deriveManifestFilename(password, it.toLong()) }
+    private fun manifestFilenameIterator() = generateSequence(0) { it + 1 }.map { deriveManifestFilename(pwSha, it.toLong()) }
 
     private fun cleanManifest() {
         manifestFilenameIterator().takeWhile { source.has(it) }.forEach { source.delete(it) }
     }
 
     private fun readIndex(): Index {
-        if (!source.has(deriveManifestFilename(password, 0)))
+        if (!source.has(deriveManifestFilename(pwSha, 0)))
             return Index(hashMapOf(), hashMapOf())
         val nameIter = manifestFilenameIterator().takeWhile { source.has(it) }.iterator()
         val reader = ChainedDecryptor(source, keysManifest, nameIter)
