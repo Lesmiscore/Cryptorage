@@ -12,9 +12,9 @@ import java.util.stream.Stream
 internal inline fun CharSequence.utf8Bytes(): ByteArray =
         "$this".toByteArray(StandardCharsets.UTF_8)
 
-internal inline fun ByteArray.takePrimitive(n: Int): ByteArray = crop(0, n)
+internal inline fun ByteArray.leading(n: Int): ByteArray = crop(0, n)
 
-internal inline fun ByteArray.tailPrimitive(n: Int): ByteArray = crop(size - n, n)
+internal inline fun ByteArray.trailing(n: Int): ByteArray = crop(size - n, n)
 
 internal inline fun ByteArray.crop(off: Int, len: Int): ByteArray {
     val result = ByteArray(len)

@@ -23,7 +23,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             val utf8Bytes1 = password.utf8Bytes()
             val utf8Bytes2 = "$password$password".utf8Bytes()
             val hash = MessageDigest.getInstance("sha-256")
-            return Pair(hash.digest(hash.digest(utf8Bytes1)).takePrimitive(16), hash.digest(hash.digest(utf8Bytes2)).tailPrimitive(16))
+            return Pair(hash.digest(hash.digest(utf8Bytes1)).leading(16), hash.digest(hash.digest(utf8Bytes2)).trailing(16))
         }
     }
 
@@ -54,7 +54,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         val file = CryptorageFile(splitSize = splitSize)
         index.files[name] = file
         commit()
-        return ChainedEncryptor(source, splitSize, keys, file, { commit() })
+        return ChainedEncryptor(source, splitSize, keys, file) { commit() }
     }
 
     /** Moves file */
@@ -144,7 +144,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             val meta: MutableMap<String, String>
     )
 
-    private data class CryptorageFile(var files: MutableList<String> = ArrayList(), var splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
+    private data class CryptorageFile(var files: MutableList<String> = ArrayList(), val splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
         constructor(file: JsonObject) :
                 this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!, file.long("size")!!)
     }
