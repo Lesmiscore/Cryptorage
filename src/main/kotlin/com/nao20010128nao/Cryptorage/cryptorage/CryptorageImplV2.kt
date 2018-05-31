@@ -8,21 +8,39 @@ import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
+import org.bitcoinj.core.ECKey
 import java.io.FileNotFoundException
+import java.security.SecureRandom
 
-internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
+internal class CryptorageImplV2(private val source: FileSource, private val password: String) : Cryptorage {
     companion object {
         const val MANIFEST: String = "manifest"
         const val SPLIT_SIZE_DEFAULT: Int = 100 * 1024 /* 100kb */ - 16 /* Final block size */
 
-        private fun populateKeys(password: String): AesKeys {
-            val utf8Bytes1 = password.utf8Bytes()
-            val utf8Bytes2 = "$password$password".utf8Bytes()
-            return Pair(utf8Bytes1.digest().digest().leading(16), utf8Bytes2.digest().digest().trailing(16))
+        internal fun deriveKeys(password: String, nonce: Long = MANIFEST.hashCode().toLong()): AesKeys {
+            val pwSha = password.utf8Bytes().digest()
+            val ec = ECKey.fromPrivate(pwSha)
+            val ecPublic = ec.pubKeyPoint
+            val ecMultiplied = ecPublic.multiply(nonce.toBigInteger())
+            val compressed = ecMultiplied.getEncoded(true)
+            val compressedDigest = compressed.digest().digest()
+            return compressedDigest.leading(16) to compressedDigest.trailing(16)
+        }
+
+        internal fun deriveManifestFilename(password: String, index: Long): String {
+            val pwSha = password.utf8Bytes().digest()
+            val ec = ECKey.fromPrivate(pwSha)
+            val ecPublic = ec.pubKeyPoint
+            val ecMultiplied = ecPublic.multiply(pwSha.toBigInteger()).multiply(index.toBigInteger())
+            val compressed = ecMultiplied.getEncoded(true)
+            val compressedDigest = compressed.digest().digest()
+            val names = compressedDigest.leading(16).toUUIDHashed() + compressedDigest.trailing(16).toUUIDHashed()
+            return names.replace("-", "")
         }
     }
 
-    constructor(source: FileSource, password: String) : this(source, populateKeys(password))
+    private val keysManifest = deriveKeys(password)
+    private val random = SecureRandom()
 
     private val index: Index = readIndex()
 
@@ -37,7 +55,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         val file = index.files[name]!!
         val indexOffset: Int = offset / file.splitSize
         val fileOffset: Int = offset % file.splitSize
-        return ChainedDecryptor(source, keys, file.files.drop(indexOffset), fileOffset)
+        return ChainedDecryptor(source, deriveKeys(password, file.nonce), file.files.drop(indexOffset), fileOffset)
     }
 
     /** Opens file for writing */
@@ -45,11 +63,12 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if (has(name)) {
             delete(name)
         }
-        val splitSize = (index.meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
-        val file = CryptorageFile(splitSize = splitSize)
+        val splitSize = splitSize()
+        val nonce = random.nextLong()
+        val file = CryptorageFile(splitSize = splitSize, nonce = nonce)
         index.files[name] = file
         commit()
-        return ChainedEncryptor(source, splitSize, keys, file) { commit() }
+        return ChainedEncryptor(source, splitSize, deriveKeys(password, nonce), file, { commit() })
     }
 
     /** Moves file */
@@ -109,21 +128,33 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         index.meta[key] = value
     }
 
+    private fun splitSize(): Int = (index.meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
+
+    private fun manifestFilenameIterator() = generateSequence(0) { it + 1 }.map { deriveManifestFilename(password, it.toLong()) }
+
+    private fun cleanManifest() {
+        manifestFilenameIterator().takeWhile { source.has(it) }.forEach { source.delete(it) }
+    }
 
     private fun readIndex(): Index {
-        if (!source.has(MANIFEST))
+        if (!source.has(deriveManifestFilename(password, 0)))
             return Index(hashMapOf(), hashMapOf())
-        val data = (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
+        val nameIter = manifestFilenameIterator().takeWhile { source.has(it) }.iterator()
+        val reader = ChainedDecryptor(source, keysManifest, nameIter)
+        val data = (Parser().parse(reader.asCharSource().openStream()) as JsonObject)
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
         return Index(files.toMutableMap(), meta.toMutableMap())
     }
 
     private fun commit() {
+        cleanManifest()
         val root = JsonObject()
         root["files"] = index.files.mapValues { it.value.toJsonMap() }
         root["meta"] = index.meta
-        AesEncryptorByteSink(source.put(MANIFEST), keys)
+        val iter = manifestFilenameIterator().iterator()
+        val dummyFile = CryptorageFile(nonce = MANIFEST.hashCode().toLong())
+        ChainedEncryptor(source, splitSize(), keysManifest, dummyFile, {}, { iter.next() })
                 .write(root.toJsonString(false).utf8Bytes())
     }
 
@@ -131,7 +162,8 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             "files" to files,
             "splitSize" to splitSize,
             "lastModified" to lastModified,
-            "size" to size
+            "size" to size,
+            "nonce" to nonce
     )
 
     private data class Index(
@@ -139,9 +171,21 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             val meta: MutableMap<String, String>
     )
 
-    private data class CryptorageFile(var files: MutableList<String> = ArrayList(), val splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
+    private data class CryptorageFile(
+            var files: MutableList<String> = ArrayList(),
+            val splitSize: Int = 0,
+            var lastModified: Long = 0,
+            var size: Long = 0,
+            val nonce: Long = 0
+    ) {
         constructor(file: JsonObject) :
-                this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!, file.long("size")!!)
+                this(
+                        file.array<String>("files")!!.toMutableList(),
+                        file.int("splitSize")!!,
+                        file.long("lastModified")!!,
+                        file.long("size")!!,
+                        file.long("nonce")!!
+                )
     }
 
     private class ChainedEncryptor(
@@ -149,7 +193,8 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             size: Int,
             keys: AesKeys,
             private val file: CryptorageFile,
-            private val commitR: () -> Unit
+            private val commitR: () -> Unit,
+            private val filenameResolver: (() -> String?)? = null
     ) : ChainedEncryptorBase(source, size, keys) {
         override fun onRewrite() {
             file.files.forEach {
@@ -170,5 +215,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         override fun commit() {
             commitR()
         }
+
+        override fun generateFileName(): String = filenameResolver?.invoke() ?: super.generateFileName()
     }
 }

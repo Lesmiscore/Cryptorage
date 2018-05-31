@@ -2,6 +2,7 @@ package com.nao20010128nao.Cryptorage
 
 import com.nao20010128nao.Cryptorage.cryptorage.CombinedCryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
+import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.cryptorage.ReadOnlyCryptorage
 import com.nao20010128nao.Cryptorage.file.*
 import java.io.File
@@ -25,6 +26,8 @@ fun newMemoryFileSource(): FileSource = MemoryFileSource()
 
 fun FileSource.withV1Encryption(password: String): Cryptorage = CryptorageImplV1(this, password)
 fun FileSource.withV1Encryption(keys: AesKeys): Cryptorage = CryptorageImplV1(this, keys)
+
+fun FileSource.withV2Encryption(password: String): Cryptorage = CryptorageImplV2(this, password)
 
 
 fun List<Cryptorage>.combine(): Cryptorage = CombinedCryptorage(this)

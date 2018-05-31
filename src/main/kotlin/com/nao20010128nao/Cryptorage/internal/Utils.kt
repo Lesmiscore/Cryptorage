@@ -4,9 +4,10 @@ package com.nao20010128nao.Cryptorage.internal
 
 import com.google.common.io.ByteSource
 import com.google.common.io.CharSource
+import java.math.BigInteger
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.*
-import java.util.stream.Stream
 
 
 internal inline fun CharSequence.utf8Bytes(): ByteArray =
@@ -28,6 +29,9 @@ internal inline fun ByteSource.asCharSource(): CharSource = this.asCharSource(St
 internal inline fun generateRandomName(): String =
         "${UUID.randomUUID()}${UUID.randomUUID()}".replace("-", "")
 
+internal inline fun ByteArray.digest(algo: String = "sha-256"): ByteArray = MessageDigest.getInstance(algo).digest(this)
+internal inline fun ByteArray.toUUIDHashed(): String = UUID.nameUUIDFromBytes(this).toString()
+internal inline fun ByteArray.toBigInteger(): BigInteger = BigInteger(this)
 
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
 internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
