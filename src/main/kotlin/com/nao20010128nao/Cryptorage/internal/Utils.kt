@@ -10,8 +10,7 @@ import java.security.MessageDigest
 import java.util.*
 
 
-internal inline fun CharSequence.utf8Bytes(): ByteArray =
-        "$this".toByteArray(StandardCharsets.UTF_8)
+internal inline fun String.utf8Bytes(): ByteArray = toByteArray(StandardCharsets.UTF_8)
 
 internal inline fun ByteArray.leading(n: Int): ByteArray = crop(0, n)
 

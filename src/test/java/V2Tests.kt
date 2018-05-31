@@ -3,7 +3,6 @@ import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.file.FileSource
 import com.nao20010128nao.Cryptorage.newMemoryFileSource
-import com.nao20010128nao.Cryptorage.withV1Encryption
 import com.nao20010128nao.Cryptorage.withV2Encryption
 import org.junit.Test
 import java.security.MessageDigest

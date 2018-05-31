@@ -29,9 +29,10 @@ internal class CryptorageImplV2(private val source: FileSource, private val pass
 
         internal fun deriveManifestFilename(password: String, index: Long): String {
             val pwSha = password.utf8Bytes().digest()
+            val indexSha = "$index".utf8Bytes().digest()
             val ec = ECKey.fromPrivate(pwSha)
             val ecPublic = ec.pubKeyPoint
-            val ecMultiplied = ecPublic.multiply(pwSha.toBigInteger()).multiply(index.toBigInteger())
+            val ecMultiplied = ecPublic.multiply(pwSha.toBigInteger()).multiply(indexSha.toBigInteger())
             val compressed = ecMultiplied.getEncoded(true)
             val compressedDigest = compressed.digest().digest()
             val names = compressedDigest.leading(16).toUUIDHashed() + compressedDigest.trailing(16).toUUIDHashed()
