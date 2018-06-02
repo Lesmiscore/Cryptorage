@@ -44,3 +44,9 @@ internal inline fun <T, R> Iterable<T>.firstNonNull(func: (T) -> R?): R? {
     }
     return null
 }
+
+internal inline fun <K, V> createSizeLimitedMap(size: Int): MutableMap<K, V> {
+    return object : LinkedHashMap<K, V>(size) {
+        override fun removeEldestEntry(p0: MutableMap.MutableEntry<K, V>?): Boolean = this.size > size
+    }
+}

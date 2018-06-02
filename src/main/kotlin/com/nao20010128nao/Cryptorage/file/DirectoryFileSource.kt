@@ -3,6 +3,7 @@ package com.nao20010128nao.Cryptorage.file
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
+import com.nao20010128nao.Cryptorage.internal.createSizeLimitedMap
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -13,14 +14,14 @@ internal class DirectoryFileSource(private val dir: File) : FileSource {
 
     /** Deletes file(s) */
     override fun delete(name: String) {
-        File(dir, name).delete()
+        createFileObj(name).delete()
     }
 
     /** Opens file for reading */
-    override fun open(name: String, offset: Int): ByteSource = FileByteSource(File(dir, name), offset)
+    override fun open(name: String, offset: Int): ByteSource = FileByteSource(createFileObj(name), offset)
 
     /** Opens file for writing */
-    override fun put(name: String): ByteSink = FileByteSink(File(dir, name))
+    override fun put(name: String): ByteSink = FileByteSink(createFileObj(name))
 
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean
@@ -39,4 +40,7 @@ internal class DirectoryFileSource(private val dir: File) : FileSource {
 
         override fun openStream(): OutputStream = file.outputStream()
     }
+
+    private inline fun createFileObj(name: String): File = fileObjCache.getOrPut(name) { File(dir, name) }
+    private val fileObjCache: MutableMap<String, File> = createSizeLimitedMap(100)
 }
