@@ -36,7 +36,11 @@ internal inline fun readOnly(what: String): Nothing = throw Error("This $what is
 internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
 internal inline fun <T, R> Iterable<T>.firstNonNull(func: (T) -> R?): R? {
     for (i in this) {
-        return func(i) ?: continue
+        return try {
+            func(i)
+        } catch (e: Throwable) {
+            null
+        } ?: continue
     }
     return null
 }
