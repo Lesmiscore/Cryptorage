@@ -172,7 +172,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     )
 
     private data class CryptorageFile(
-            var files: MutableList<String> = ArrayList(),
+            val files: MutableList<String> = ArrayList(),
             val splitSize: Int = 0,
             var lastModified: Long = 0,
             var size: Long = 0,
@@ -200,7 +200,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
             file.files.forEach {
                 source.delete(it)
             }
-            file.files = ArrayList()
+            file.files.clear()
         }
 
         override fun onStartWrite() {

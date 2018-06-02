@@ -139,7 +139,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             val meta: MutableMap<String, String>
     )
 
-    private data class CryptorageFile(var files: MutableList<String> = ArrayList(), val splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
+    private data class CryptorageFile(val files: MutableList<String> = ArrayList(), val splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
         constructor(file: JsonObject) :
                 this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!, file.long("size")!!)
     }
@@ -155,7 +155,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             file.files.forEach {
                 source.delete(it)
             }
-            file.files = ArrayList()
+            file.files.clear()
         }
 
         override fun onStartWrite() {
