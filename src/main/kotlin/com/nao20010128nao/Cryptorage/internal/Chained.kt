@@ -1,5 +1,6 @@
 package com.nao20010128nao.Cryptorage.internal
 
+import com.google.common.base.Optional
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
@@ -8,8 +9,8 @@ import com.nao20010128nao.Cryptorage.file.FileSource
 import java.io.InputStream
 import java.io.OutputStream
 
-internal class ChainedDecryptor(private val source: FileSource, private val keys: AesKeys, private val files: Iterator<String>, private val bytesToSkip: Int = 0) : ByteSource() {
-    constructor(source: FileSource, keys: AesKeys, files: List<String>, bytesToSkip: Int = 0) : this(source, keys, files.iterator(), bytesToSkip)
+internal class ChainedDecryptor(private val source: FileSource, private val keys: AesKeys, private val files: Iterator<String>, private val bytesToSkip: Int = 0, private val totalSize: Long? = null) : ByteSource() {
+    constructor(source: FileSource, keys: AesKeys, files: List<String>, bytesToSkip: Int = 0, totalSize: Long? = null) : this(source, keys, files.iterator(), bytesToSkip, totalSize)
 
     override fun openStream(): InputStream = ConcatenatedInputStream(
             files.asSequence()
@@ -20,10 +21,12 @@ internal class ChainedDecryptor(private val source: FileSource, private val keys
     ).also {
         ByteStreams.skipFully(it, bytesToSkip.toLong())
     }
+
+    override fun sizeIfKnown(): Optional<Long> = Optional.fromNullable(totalSize)
 }
 
 internal abstract class ChainedEncryptorBase(private val source: FileSource, private val size: Int, private val keys: AesKeys) : ByteSink() {
-    var current: OutputStream? = null
+    private var current: OutputStream? = null
 
     abstract fun onRewrite()
     abstract fun onStartWrite()

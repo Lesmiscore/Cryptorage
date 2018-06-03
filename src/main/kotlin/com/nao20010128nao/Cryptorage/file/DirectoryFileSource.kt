@@ -1,5 +1,6 @@
 package com.nao20010128nao.Cryptorage.file
 
+import com.google.common.base.Optional
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
@@ -31,6 +32,8 @@ internal class DirectoryFileSource(private val dir: File) : FileSource {
         override fun openStream(): InputStream = file.inputStream().also {
             ByteStreams.skipFully(it, offset.toLong())
         }
+
+        override fun sizeIfKnown(): Optional<Long> = Optional.of(file.length() - offset)
     }
 
     private class FileByteSink(private val file: File) : ByteSink() {

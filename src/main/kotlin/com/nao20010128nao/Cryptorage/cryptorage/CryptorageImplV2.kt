@@ -55,7 +55,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
         val file = index.files[name]!!
         val indexOffset: Int = offset / file.splitSize
         val fileOffset: Int = offset % file.splitSize
-        return ChainedDecryptor(source, deriveKeys(pwSha, file.nonce), file.files.drop(indexOffset), fileOffset)
+        return ChainedDecryptor(source, deriveKeys(pwSha, file.nonce), file.files.drop(indexOffset), fileOffset, file.size - offset)
     }
 
     /** Opens file for writing */
@@ -128,7 +128,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
         index.meta[key] = value
     }
 
-    private fun splitSize(): Int = (index.meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
+    private fun splitSize(): Int = index.meta[META_SPLIT_SIZE]?.toInt() ?: SPLIT_SIZE_DEFAULT
 
     private fun manifestFilenameIterator() = generateSequence(0) { it + 1 }.map { deriveManifestFilename(pwSha, it.toLong()) }
 

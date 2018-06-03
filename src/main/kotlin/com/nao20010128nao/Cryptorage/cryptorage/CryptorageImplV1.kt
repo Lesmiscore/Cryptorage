@@ -37,7 +37,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         val file = index.files[name]!!
         val indexOffset: Int = offset / file.splitSize
         val fileOffset: Int = offset % file.splitSize
-        return ChainedDecryptor(source, keys, file.files.drop(indexOffset), fileOffset)
+        return ChainedDecryptor(source, keys, file.files.drop(indexOffset), fileOffset, file.size - offset)
     }
 
     /** Opens file for writing */
@@ -45,7 +45,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         if (has(name)) {
             delete(name)
         }
-        val splitSize = (index.meta[META_SPLIT_SIZE] ?: "$SPLIT_SIZE_DEFAULT").toInt()
+        val splitSize = index.meta[META_SPLIT_SIZE]?.toInt() ?: SPLIT_SIZE_DEFAULT
         val file = CryptorageFile(splitSize = splitSize)
         index.files[name] = file
         commit()
