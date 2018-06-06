@@ -2,6 +2,8 @@ import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.internal.digest
+import com.nao20010128nao.Cryptorage.internal.utf8Bytes
 import com.nao20010128nao.Cryptorage.newMemoryFileSource
 import com.nao20010128nao.Cryptorage.withV2Encryption
 import org.junit.Test
@@ -17,7 +19,8 @@ class V2Tests {
         // this code should derive:
         // Key: 494BF360145433D921CAEB533AE8F84E
         // IV:  C585A6E85E0F81640D733FA65039F4F1
-        val keys = CryptorageImplV2.deriveKeys("Senbonzakura", 120)
+        val sha = "Senbonzakura".utf8Bytes().digest()
+        val keys = CryptorageImplV2.deriveKeys(sha, 120)
         println(keys.first.toHex())
         println(keys.second.toHex())
         require(keys.first.toHex() == "494BF360145433D921CAEB533AE8F84E")
