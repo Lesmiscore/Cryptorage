@@ -9,6 +9,7 @@ import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
 import java.io.FileNotFoundException
+import java.util.*
 
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
     companion object {
@@ -25,88 +26,111 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
     constructor(source: FileSource, password: String) : this(source, populateKeys(password))
 
     private val index: Index = readIndex()
+    private var hasClosed: Boolean = false
 
     /** Lists up file names */
-    override fun list(): Array<String> = index.files.keys.sorted().toTypedArray()
+    override fun list(): Array<String> = notClosed { index.files.keys.sorted().toTypedArray() }
 
     /** Opens file for reading */
     override fun open(name: String, offset: Int): ByteSource {
-        if (!has(name)) {
-            throw FileNotFoundException(name)
+        return notClosed {
+            if (!has(name)) {
+                throw FileNotFoundException(name)
+            }
+            val file = index.files[name]!!
+            val indexOffset: Int = offset / file.splitSize
+            val fileOffset: Int = offset % file.splitSize
+            ChainedDecryptor(source, keys, file.files.drop(indexOffset), fileOffset, file.size - offset)
         }
-        val file = index.files[name]!!
-        val indexOffset: Int = offset / file.splitSize
-        val fileOffset: Int = offset % file.splitSize
-        return ChainedDecryptor(source, keys, file.files.drop(indexOffset), fileOffset, file.size - offset)
     }
 
     /** Opens file for writing */
     override fun put(name: String): ByteSink {
-        if (has(name)) {
-            delete(name)
+        return notClosed {
+            if (has(name)) {
+                delete(name)
+            }
+            val splitSize = index.meta[META_SPLIT_SIZE]?.toInt() ?: SPLIT_SIZE_DEFAULT
+            val file = CryptorageFile(splitSize = splitSize)
+            index.files[name] = file
+            commit()
+            ChainedEncryptor(source, splitSize, keys, file) { }
         }
-        val splitSize = index.meta[META_SPLIT_SIZE]?.toInt() ?: SPLIT_SIZE_DEFAULT
-        val file = CryptorageFile(splitSize = splitSize)
-        index.files[name] = file
-        commit()
-        return ChainedEncryptor(source, splitSize, keys, file) { commit() }
     }
 
     /** Moves file */
     override fun mv(from: String, to: String) {
-        if (!has(from)) {
-            return
+        notClosed {
+            if (!has(from)) {
+                return
+            }
+            if (has(to)) {
+                delete(to)
+            }
+            index.files[to] = index.files[from]!!
         }
-        if (has(to)) {
-            delete(to)
-        }
-        index.files[to] = index.files[from]!!
-        commit()
     }
 
     /** Deletes a file */
     override fun delete(name: String) {
-        if (!has(name)) {
-            return
+        notClosed {
+            if (!has(name)) {
+                return
+            }
+            val removal = index.files[name]!!.files
+            removal.forEach {
+                source.delete(it)
+            }
+            index.files.remove(name)
         }
-        val removal = index.files[name]!!.files
-        removal.forEach {
-            source.delete(it)
-        }
-        index.files.remove(name)
-        commit()
     }
 
     /** Checks last modified date and time */
-    override fun lastModified(name: String): Long = when {
-        has(name) -> index.files[name]!!.lastModified
-        else -> 0
+    override fun lastModified(name: String): Long = notClosed {
+        when {
+            has(name) -> index.files[name]!!.lastModified
+            else -> 0
+        }
     }
 
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean
-        get() = source.isReadOnly
+        get() = notClosed { source.isReadOnly }
 
     override fun size(name: String): Long {
-        if (!has(name)) {
-            throw FileNotFoundException(name)
+        return notClosed {
+            if (!has(name)) {
+                throw FileNotFoundException(name)
+            }
+            index.files[name]!!.size
         }
-        return index.files[name]!!.size
     }
 
     /** Removes unused files */
     override fun gc() {
-        val ls = source.list().asList()
-        val unused = ls - index.files.flatMap { it.value.files } - MANIFEST
-        unused.forEach {
-            source.delete(it)
+        notClosed {
+            val ls = source.list().asList()
+            val unused = ls - index.files.flatMap { it.value.files } - MANIFEST
+            unused.forEach {
+                source.delete(it)
+            }
         }
     }
 
-    override fun meta(key: String): String? = index.meta[key]
+    override fun meta(key: String): String? = notClosed { index.meta[key] }
 
     override fun meta(key: String, value: String) {
-        index.meta[key] = value
+        notClosed { index.meta[key] = value }
+    }
+
+    override fun commit() {
+        notClosed {
+            val root = JsonObject()
+            root["files"] = index.files.mapValues { it.value.toJsonMap() }
+            root["meta"] = index.meta
+            AesEncryptorByteSink(source.put(MANIFEST), keys)
+                    .write(root.toJsonString(false).utf8Bytes())
+        }
     }
 
 
@@ -119,12 +143,19 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         return Index(files.toMutableMap(), meta.toMutableMap())
     }
 
-    private fun commit() {
-        val root = JsonObject()
-        root["files"] = index.files.mapValues { it.value.toJsonMap() }
-        root["meta"] = index.meta
-        AesEncryptorByteSink(source.put(MANIFEST), keys)
-                .write(root.toJsonString(false).utf8Bytes())
+    override fun close() {
+        commit()
+        Arrays.fill(keys.first, 0)
+        Arrays.fill(keys.second, 0)
+        index.files.clear()
+        index.meta.clear()
+        hasClosed = true
+    }
+
+    private inline fun <T> notClosed(f: () -> T): T {
+        if (hasClosed)
+            closed("Cryptorage")
+        return f()
     }
 
     private fun CryptorageFile.toJsonMap(): Map<String, Any> = mapOf(

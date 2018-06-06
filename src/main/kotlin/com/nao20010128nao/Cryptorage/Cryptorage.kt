@@ -3,9 +3,10 @@ package com.nao20010128nao.Cryptorage
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.file.FileSource
+import java.io.Closeable
 
 /** Encrypted storage */
-interface Cryptorage : FileSource/* allow itself to be a FileSource */ {
+interface Cryptorage : FileSource, Closeable {
     companion object {
         /** Split size for larger files */
         const val META_SPLIT_SIZE: String = "split_size"
@@ -60,4 +61,10 @@ interface Cryptorage : FileSource/* allow itself to be a FileSource */ {
 
     /** Removes unused files */
     fun gc()
+
+    /** Flushes all content to FileSource */
+    fun commit()
+
+    /** Closes Cryptorage and release objects */
+    override fun close()
 }

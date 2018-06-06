@@ -151,6 +151,7 @@ class V2Tests {
         dest.close()
         assertTrue(cryptorage.list().contains("file1"))
         assertTrue(cryptorage.list().contains("file2"))
+        cryptorage.close()
 
         val cryptorageReopen = memory.openForTest()
         assertTrue(cryptorageReopen.list().contains("file1"))

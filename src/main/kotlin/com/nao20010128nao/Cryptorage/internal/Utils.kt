@@ -34,6 +34,7 @@ internal inline fun ByteArray.toBigInteger(): BigInteger = BigInteger(this)
 
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
 internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
+internal inline fun closed(what: String): Nothing = throw Error("This $what is already closed.")
 internal inline fun <T, R> Iterable<T>.firstNonNull(func: (T) -> R?): R? {
     for (i in this) {
         return try {

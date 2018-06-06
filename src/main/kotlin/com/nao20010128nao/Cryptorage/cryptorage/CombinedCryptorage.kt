@@ -17,6 +17,7 @@ internal class CombinedCryptorage(val cryptorages: List<Cryptorage>) : Cryptorag
     override fun lastModified(name: String): Long = cryptorages.firstNonNull { it.lastModified(name) }!!
     override fun size(name: String): Long = cryptorages.firstNonNull { it.size(name) }!!
     override fun meta(key: String): String? = cryptorages.firstNonNull { it.meta(key) }
+    override fun close() = cryptorages.forEach { it.close() }
 
 
     override fun put(name: String): ByteSink = readOnly("Cryptorage")
@@ -24,4 +25,5 @@ internal class CombinedCryptorage(val cryptorages: List<Cryptorage>) : Cryptorag
     override fun delete(name: String) = readOnly("Cryptorage")
     override fun meta(key: String, value: String) = readOnly("Cryptorage")
     override fun gc() = readOnly("Cryptorage")
+    override fun commit() = readOnly("Cryptorage")
 }
