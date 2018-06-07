@@ -4,6 +4,7 @@ package com.nao20010128nao.Cryptorage.internal
 
 import com.google.common.io.ByteSource
 import com.google.common.io.CharSource
+import java.io.FileNotFoundException
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -35,6 +36,8 @@ internal inline fun ByteArray.toBigInteger(): BigInteger = BigInteger(this)
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
 internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
 internal inline fun closed(what: String): Nothing = throw Error("This $what is already closed.")
+internal inline fun fileNotFound(what: String): Nothing = throw FileNotFoundException(what)
+
 internal inline fun <T, R> Iterable<T>.firstNonNull(func: (T) -> R?): R? {
     for (i in this) {
         return try {

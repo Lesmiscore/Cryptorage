@@ -53,7 +53,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     override fun open(name: String, offset: Int): ByteSource {
         return notClosed {
             if (!has(name)) {
-                throw FileNotFoundException(name)
+                fileNotFound(name)
             }
             val file = index.files[name]!!
             val indexOffset: Int = offset / file.splitSize
@@ -80,7 +80,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     override fun mv(from: String, to: String) {
         notClosed {
             if (!has(from)) {
-                return
+                fileNotFound(from)
             }
             if (has(to)) {
                 delete(to)
@@ -93,7 +93,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     override fun delete(name: String) {
         notClosed {
             if (!has(name)) {
-                return
+                fileNotFound(name)
             }
             val removal = index.files[name]!!.files
             removal.forEach {
@@ -107,7 +107,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     override fun lastModified(name: String): Long = notClosed {
         when {
             has(name) -> index.files[name]!!.lastModified
-            else -> 0
+            else -> fileNotFound(name)
         }
     }
 
