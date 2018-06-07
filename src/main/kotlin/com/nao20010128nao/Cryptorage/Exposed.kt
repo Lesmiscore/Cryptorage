@@ -1,5 +1,6 @@
 package com.nao20010128nao.Cryptorage
 
+import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.cryptorage.CombinedCryptorage
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV2
@@ -17,19 +18,24 @@ typealias AesKeys = Pair<AesKey, AesIv>
 
 /** Converts AesKey to SecretKeySpec for Cipher */
 fun AesKey.toCryptoKey(): SecretKeySpec = SecretKeySpec(this, "AES")
+
 /** Converts AesIv to IvParameterSpec for Cipher */
 fun AesIv.toCryptoIv(): IvParameterSpec = IvParameterSpec(this)
+
 fun AesKeys.forCrypto(): Pair<SecretKeySpec, IvParameterSpec> = first.toCryptoKey() to second.toCryptoIv()
 
 /** Treats Web directory as FileSource */
 fun URL.asFileSource(): FileSource = UrlFileSource(this)
+
 /** Treats file system as FileSource */
 fun File.asFileSource(): FileSource = DirectoryFileSource(this)
+
 /** Makes a virtual FileSource on memory */
 fun newMemoryFileSource(): FileSource = MemoryFileSource()
 
 /** Provides a light, easy-to-use Cryptorage */
 fun FileSource.withV1Encryption(password: String): Cryptorage = CryptorageImplV1(this, password)
+
 /** Provides a light, easy-to-use Cryptorage */
 fun FileSource.withV1Encryption(keys: AesKeys): Cryptorage = CryptorageImplV1(this, keys)
 
@@ -38,11 +44,13 @@ fun FileSource.withV2Encryption(password: String): Cryptorage = CryptorageImplV2
 
 /** Combines Cryptorages as one, not writable */
 fun List<Cryptorage>.combine(): Cryptorage = CombinedCryptorage(this)
+
 /** Combines Cryptorages as one, not writable */
 operator fun Cryptorage.plus(other: Cryptorage): Cryptorage = CombinedCryptorage(this, other)
 
 /** Converts to non-writable Cryptorage */
 fun Cryptorage.asReadOnlyCryptorage(): Cryptorage = ReadOnlyCryptorage(this)
+
 /** Converts to non-writable FileSource */
 fun FileSource.asRealOnlyFileSource(): FileSource = ReadOnlyFileSource(this)
 
@@ -59,3 +67,7 @@ fun Cryptorage.copyTo(to: Cryptorage): CopyResult {
 
 
 data class CopyResult(val files: Long, val totalBytes: Long)
+
+var Cryptorage.splitSize: Int?
+    get() = meta(META_SPLIT_SIZE)?.toIntOrNull()
+    set(value) = meta(META_SPLIT_SIZE, "$value")
