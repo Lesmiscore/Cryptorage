@@ -33,6 +33,9 @@ fun File.asFileSource(): FileSource = DirectoryFileSource(this)
 /** Makes a virtual FileSource on memory */
 fun newMemoryFileSource(): FileSource = MemoryFileSource()
 
+/** Makes a virtual FileSource on memory */
+fun Map<String, ByteArray>.newMemoryFileSource(): FileSource = MemoryFileSource(toMutableMap())
+
 /** Provides a light, easy-to-use Cryptorage */
 fun FileSource.withV1Encryption(password: String): Cryptorage = CryptorageImplV1(this, password)
 
