@@ -2,9 +2,11 @@
 
 package com.nao20010128nao.Cryptorage.internal
 
+import com.google.common.collect.Multimap
 import com.google.common.io.ByteSource
 import com.google.common.io.CharSource
 import java.io.FileNotFoundException
+import java.io.InputStream
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -53,4 +55,28 @@ internal inline fun <K, V> createSizeLimitedMap(size: Int): MutableMap<K, V> {
     return object : LinkedHashMap<K, V>(size) {
         override fun removeEldestEntry(p0: MutableMap.MutableEntry<K, V>?): Boolean = this.size > size
     }
+}
+
+internal inline fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
+
+internal inline fun InputStream.digest(algo: String = "sha-256"): String {
+    val md = MessageDigest.getInstance(algo)
+    try {
+        val buf = ByteArray(8192)
+        var r: Int
+        while (true) {
+            r = read(buf)
+            if (r <= 0) {
+                break
+            }
+            md.update(buf, 0, r)
+        }
+    } finally {
+        close()
+    }
+    return md.digest().toHex()
+}
+
+internal inline operator fun <K, V> Multimap<K, V>.set(k: K, v: V) {
+    put(k, v)
 }

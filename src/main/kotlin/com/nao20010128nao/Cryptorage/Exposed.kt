@@ -6,6 +6,7 @@ import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
 import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.cryptorage.ReadOnlyCryptorage
 import com.nao20010128nao.Cryptorage.file.*
+import com.nao20010128nao.Cryptorage.internal.Compressable
 import java.io.File
 import java.net.URL
 import javax.crypto.spec.IvParameterSpec
@@ -71,6 +72,17 @@ fun Cryptorage.copyTo(to: Cryptorage): CopyResult {
 
 data class CopyResult(val files: Long, val totalBytes: Long)
 
+/** Get or set split size for a file */
 var Cryptorage.splitSize: Int?
     get() = meta(META_SPLIT_SIZE)?.toIntOrNull()
     set(value) = meta(META_SPLIT_SIZE, "$value")
+
+/** Compresses Cryptorage if it's possible */
+fun Cryptorage.compressIfPossible(commit: Boolean = false) {
+    if (this is Compressable) {
+        doCompress()
+        if (commit) {
+            commit()
+        }
+    }
+}

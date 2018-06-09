@@ -1,7 +1,7 @@
 import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.Cryptorage
+import com.nao20010128nao.Cryptorage.compressIfPossible
 import com.nao20010128nao.Cryptorage.file.FileSource
-import com.nao20010128nao.Cryptorage.internal.SizeLimitedOutputStream
 import com.nao20010128nao.Cryptorage.newMemoryFileSource
 import com.nao20010128nao.Cryptorage.withV1Encryption
 import org.junit.Test
@@ -141,5 +141,58 @@ class V1Tests {
         val cryptorageReopen = memory.openForTest()
         assertTrue(cryptorageReopen.list().contains("file1"))
         assertTrue(cryptorageReopen.list().contains("file2"))
+    }
+
+    @Test
+    fun testCompression() {
+        val memory = newMemoryFileSource()
+        val cryptorage = memory.openForTest()
+        val payload = "It's a small world"
+
+        val test = payload.toByteArray()
+        run {
+            val file = cryptorage.put("file1").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        run {
+            val file = cryptorage.put("file2").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        run {
+            val file = cryptorage.put("file3").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        assertTrue(cryptorage.list().contains("file1"))
+        assertTrue(cryptorage.list().contains("file2"))
+        assertTrue(cryptorage.list().contains("file3"))
+        // compress
+        cryptorage.compressIfPossible(true)
+
+        // test data loss; this shouldn't be occur
+        assertTrue(cryptorage.list().contains("file1"))
+        assertTrue(cryptorage.list().contains("file2"))
+        assertTrue(cryptorage.list().contains("file3"))
+        // a manifest(V1 doesn't split) and an encrypted file; so there should be 2 files
+        assertTrue(memory.list().size == 2)
+        // we should be able to read it again
+        run {
+            val file1 = cryptorage.open("file1").openStream().readBytes()
+            val file2 = cryptorage.open("file2").openStream().readBytes()
+            val file3 = cryptorage.open("file3").openStream().readBytes()
+            assertEquals(file1, file2)
+            assertEquals(file2, file3)
+            assertEquals(file1, test)
+        }
+        // removing file shouldn't affect to an another file
+        cryptorage.delete("file2")
+        cryptorage.delete("file3")
+        // so we should be able to read it again
+        run {
+            val file1 = cryptorage.open("file1").openStream().readBytes()
+            assertEquals(file1, test)
+        }
     }
 }

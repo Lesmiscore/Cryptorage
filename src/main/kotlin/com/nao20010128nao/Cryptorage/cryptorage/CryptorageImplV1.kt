@@ -1,6 +1,7 @@
 package com.nao20010128nao.Cryptorage.cryptorage
 
 import com.beust.klaxon.*
+import com.google.common.collect.HashMultimap
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.AesKeys
@@ -10,7 +11,7 @@ import com.nao20010128nao.Cryptorage.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
 import java.util.*
 
-internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
+internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage, Compressable {
     companion object {
         const val MANIFEST: String = "manifest"
         const val SPLIT_SIZE_DEFAULT: Int = 100 * 1024 /* 100kb */ - 16 /* Final block size */
@@ -143,6 +144,35 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         index.files.clear()
         index.meta.clear()
         hasClosed = true
+    }
+
+    override fun doCompress() {
+        notClosed {
+            val allFiles = index.files.flatMap { it.value.files }
+            val hashes = HashMultimap.create<String, String>()
+            // calculate hash for all files
+            allFiles.forEach {
+                hashes[source.open(it).openStream().digest()] = it
+            }
+            // create table to replace
+            val replaceTable = hashMapOf<String, String>()
+            hashes.keys().elementSet().forEach { value ->
+                val values = hashes[value].toList()
+                val leader = values.first()
+                val files = values.drop(1)
+                files.forEach {
+                    replaceTable[it] = leader
+                }
+            }
+            // update all file list with first one: we wont re-write files
+            index.files.forEach { _, cryptorageFile ->
+                cryptorageFile.files.replaceAll { replaceTable[it] ?: it }
+            }
+            // remove unreferenced files
+            replaceTable.keys.forEach {
+                source.delete(it)
+            }
+        }
     }
 
 
