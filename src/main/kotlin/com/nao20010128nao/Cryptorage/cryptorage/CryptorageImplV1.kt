@@ -8,7 +8,6 @@ import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
-import java.io.FileNotFoundException
 import java.util.*
 
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
@@ -134,13 +133,13 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
     }
 
 
-    private fun readIndex(): Index {
-        if (!source.has(MANIFEST))
-            return Index(hashMapOf(), hashMapOf())
+    private fun readIndex(): Index = if (source.has(MANIFEST)) {
         val data = (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
-        return Index(files.toMutableMap(), meta.toMutableMap())
+        Index(files.toMutableMap(), meta.toMutableMap())
+    } else {
+        Index(hashMapOf(), hashMapOf())
     }
 
     override fun close() {
