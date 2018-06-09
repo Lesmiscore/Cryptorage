@@ -77,7 +77,11 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                 fileNotFound(name)
             }
             val removal = index.files[name]!!.files
+            val usedByOther = encryptedFilesIDontOwn(name)
             removal.forEach {
+                if (it in usedByOther) {
+                    return@forEach
+                }
                 source.delete(it)
             }
             index.files.remove(name)
@@ -132,6 +136,15 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         }
     }
 
+    override fun close() {
+        commit()
+        Arrays.fill(keys.first, 0)
+        Arrays.fill(keys.second, 0)
+        index.files.clear()
+        index.meta.clear()
+        hasClosed = true
+    }
+
 
     private fun readIndex(): Index = if (source.has(MANIFEST)) {
         val data = (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
@@ -140,15 +153,6 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         Index(files.toMutableMap(), meta.toMutableMap())
     } else {
         Index(hashMapOf(), hashMapOf())
-    }
-
-    override fun close() {
-        commit()
-        Arrays.fill(keys.first, 0)
-        Arrays.fill(keys.second, 0)
-        index.files.clear()
-        index.meta.clear()
-        hasClosed = true
     }
 
     private inline fun <T> notClosed(f: () -> T): T {
@@ -163,6 +167,9 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             "lastModified" to lastModified,
             "size" to size
     )
+
+    private fun encryptedFilesIDontOwn(nonEncrypted: String): SortedSet<String> =
+            index.files.asSequence().filter { it.key != nonEncrypted }.flatMap { it.value.files.asSequence() }.toSortedSet()
 
     private data class Index(
             val files: MutableMap<String, CryptorageFile>,
