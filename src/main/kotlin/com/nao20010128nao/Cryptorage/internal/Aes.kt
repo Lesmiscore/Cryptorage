@@ -18,15 +18,9 @@ private fun createCipher(keys: AesKeys, mode: Int): Cipher {
 }
 
 internal class AesDecryptorByteSource(private val source: ByteSource, private val keys: AesKeys) : ByteSource() {
-    override fun openStream(): InputStream {
-        val cipher = createCipher(keys, Cipher.DECRYPT_MODE)
-        return CipherInputStream(source.openStream(), cipher)
-    }
+    override fun openStream(): InputStream = CipherInputStream(source.openStream(), createCipher(keys, Cipher.DECRYPT_MODE))
 }
 
 internal class AesEncryptorByteSink(private val source: ByteSink, private val keys: AesKeys) : ByteSink() {
-    override fun openStream(): OutputStream {
-        val cipher = createCipher(keys, Cipher.ENCRYPT_MODE)
-        return CipherOutputStream(source.openStream(), cipher)
-    }
+    override fun openStream(): OutputStream = CipherOutputStream(source.openStream(), createCipher(keys, Cipher.ENCRYPT_MODE))
 }
