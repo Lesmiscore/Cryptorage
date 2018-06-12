@@ -1,4 +1,4 @@
-package com.nao20010128nao.Cryptorage.file
+package com.nao20010128nao.Cryptorage.internal.file
 
 import com.google.common.base.Optional
 import com.google.common.io.ByteSink

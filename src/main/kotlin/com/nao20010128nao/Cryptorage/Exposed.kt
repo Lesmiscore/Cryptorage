@@ -1,11 +1,11 @@
 package com.nao20010128nao.Cryptorage
 
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
-import com.nao20010128nao.Cryptorage.cryptorage.CombinedCryptorage
-import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV1
-import com.nao20010128nao.Cryptorage.cryptorage.CryptorageImplV2
-import com.nao20010128nao.Cryptorage.cryptorage.ReadOnlyCryptorage
-import com.nao20010128nao.Cryptorage.file.*
+import com.nao20010128nao.Cryptorage.internal.cryptorage.CombinedCryptorage
+import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV1
+import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV2
+import com.nao20010128nao.Cryptorage.internal.cryptorage.ReadOnlyCryptorage
+import com.nao20010128nao.Cryptorage.internal.file.*
 import com.nao20010128nao.Cryptorage.internal.Compressable
 import java.io.File
 import java.net.URL

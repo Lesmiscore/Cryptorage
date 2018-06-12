@@ -1,4 +1,4 @@
-package com.nao20010128nao.Cryptorage.cryptorage
+package com.nao20010128nao.Cryptorage.internal.cryptorage
 
 import com.beust.klaxon.*
 import com.google.common.collect.HashMultimap
@@ -7,7 +7,7 @@ import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.AesKeys
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
-import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
 import java.util.*
 

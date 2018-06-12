@@ -2,7 +2,7 @@ package com.nao20010128nao.Cryptorage
 
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
-import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import java.io.Closeable
 
 /** Encrypted storage */

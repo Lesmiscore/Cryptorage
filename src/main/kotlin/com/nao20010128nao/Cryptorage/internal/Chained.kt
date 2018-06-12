@@ -5,7 +5,7 @@ import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.AesKeys
-import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import java.io.InputStream
 import java.io.OutputStream
 

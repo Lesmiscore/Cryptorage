@@ -1,4 +1,4 @@
-package com.nao20010128nao.Cryptorage.file
+package com.nao20010128nao.Cryptorage.internal.file
 
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
@@ -6,8 +6,6 @@ import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.internal.readOnly
 import com.nao20010128nao.Cryptorage.internal.unsupported
 import java.io.InputStream
-import java.io.OutputStream
-import java.lang.UnsupportedOperationException
 import java.net.HttpURLConnection
 import java.net.URL
 

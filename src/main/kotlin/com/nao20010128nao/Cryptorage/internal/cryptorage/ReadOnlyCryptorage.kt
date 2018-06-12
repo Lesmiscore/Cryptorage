@@ -1,4 +1,4 @@
-package com.nao20010128nao.Cryptorage.cryptorage
+package com.nao20010128nao.Cryptorage.internal.cryptorage
 
 import com.google.common.io.ByteSink
 import com.nao20010128nao.Cryptorage.Cryptorage

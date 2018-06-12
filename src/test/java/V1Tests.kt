@@ -1,7 +1,7 @@
 import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.compressIfPossible
-import com.nao20010128nao.Cryptorage.file.FileSource
+import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import com.nao20010128nao.Cryptorage.newMemoryFileSource
 import com.nao20010128nao.Cryptorage.withV1Encryption
 import org.junit.Test
