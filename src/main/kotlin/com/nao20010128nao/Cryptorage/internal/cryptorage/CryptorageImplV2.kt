@@ -153,11 +153,13 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
             val dummyFile = CryptorageFile(nonce = NONCE_MANIFEST)
             ChainedEncryptor(source, splitSize(), keysManifest, dummyFile, {}, { iter.next() })
                     .write(root.toJsonString(false).utf8Bytes())
+            source.commit()
         }
     }
 
     override fun close() {
         commit()
+        source.close()
         Arrays.fill(pwSha, 0)
         Arrays.fill(keysManifest.first, 0)
         Arrays.fill(keysManifest.second, 0)

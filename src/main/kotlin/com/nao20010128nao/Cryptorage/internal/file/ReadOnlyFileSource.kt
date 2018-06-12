@@ -10,6 +10,9 @@ internal class ReadOnlyFileSource(private val base: FileSource) : FileSource {
     override fun list(): Array<String> = base.list()
     override fun open(name: String, offset: Int): ByteSource = base.open(name, offset)
 
+    override fun close() = base.close()
+    override fun commit() = base.commit()
+
     override fun put(name: String): ByteSink = readOnly("FileSource")
     override fun delete(name: String) = readOnly("FileSource")
 }

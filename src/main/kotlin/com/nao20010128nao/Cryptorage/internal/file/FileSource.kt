@@ -2,9 +2,10 @@ package com.nao20010128nao.Cryptorage.internal.file
 
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
+import java.io.Closeable
 
 /** Source of files (e.g. file system, web server...) */
-interface FileSource {
+interface FileSource: Closeable {
     /** Lists up file names */
     fun list(): Array<String>
 
@@ -22,6 +23,12 @@ interface FileSource {
 
     /** Checks file exist */
     fun has(name: String): Boolean = list().contains(name)
+
+    /** Flushes all content */
+    fun commit()
+
+    /** Closes FileSource and release objects */
+    override fun close()
 
     /** Checks Cryptorage is read-only */
     val isReadOnly: Boolean

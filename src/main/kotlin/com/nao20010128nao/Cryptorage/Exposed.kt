@@ -1,12 +1,13 @@
 package com.nao20010128nao.Cryptorage
 
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
+import com.nao20010128nao.Cryptorage.internal.Compressable
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CombinedCryptorage
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV1
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.internal.cryptorage.ReadOnlyCryptorage
 import com.nao20010128nao.Cryptorage.internal.file.*
-import com.nao20010128nao.Cryptorage.internal.Compressable
+import com.nao20010128nao.Cryptorage.internal.middle.Base64MiddleFileSource
 import java.io.File
 import java.net.URL
 import javax.crypto.spec.IvParameterSpec
@@ -57,6 +58,9 @@ fun Cryptorage.asReadOnlyCryptorage(): Cryptorage = ReadOnlyCryptorage(this)
 
 /** Converts to non-writable FileSource */
 fun FileSource.asRealOnlyFileSource(): FileSource = ReadOnlyFileSource(this)
+
+/** Converts bytes into plain string using Base64*/
+fun FileSource.asBase64(): FileSource = Base64MiddleFileSource(this)
 
 /** Copies everything from Cryptorage to Cryptorage */
 fun Cryptorage.copyTo(to: Cryptorage): CopyResult {

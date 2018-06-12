@@ -4,6 +4,7 @@ package com.nao20010128nao.Cryptorage.internal
 
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteSource
+import com.google.common.io.ByteStreams
 import com.google.common.io.CharSource
 import java.io.FileNotFoundException
 import java.io.InputStream
@@ -79,4 +80,8 @@ internal inline fun InputStream.digest(algo: String = "sha-256"): String {
 
 internal inline operator fun <K, V> Multimap<K, V>.set(k: K, v: V) {
     put(k, v)
+}
+
+internal inline fun InputStream.skip(length: Int): InputStream = also {
+    ByteStreams.skipFully(this, length.toLong())
 }

@@ -24,6 +24,12 @@ internal class DirectoryFileSource(private val dir: File) : FileSource {
     /** Opens file for writing */
     override fun put(name: String): ByteSink = FileByteSink(createFileObj(name))
 
+    override fun close() {
+    }
+
+    override fun commit() {
+    }
+
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean
         get() = !dir.canWrite()

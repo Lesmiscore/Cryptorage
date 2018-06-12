@@ -30,6 +30,12 @@ internal class MemoryFileSource(private val map: MutableMap<String, ByteArray> =
         map.remove(name)
     }
 
+    override fun close() {
+    }
+
+    override fun commit() {
+    }
+
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean = false
 }

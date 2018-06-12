@@ -134,11 +134,13 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             root["meta"] = index.meta
             AesEncryptorByteSink(source.put(MANIFEST), keys)
                     .write(root.toJsonString(false).utf8Bytes())
+            source.commit()
         }
     }
 
     override fun close() {
         commit()
+        source.close()
         Arrays.fill(keys.first, 0)
         Arrays.fill(keys.second, 0)
         index.files.clear()

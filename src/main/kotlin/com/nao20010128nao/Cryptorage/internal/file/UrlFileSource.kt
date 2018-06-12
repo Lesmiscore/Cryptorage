@@ -39,6 +39,12 @@ internal class UrlFileSource(private val url: URL) : FileSource {
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean = true
 
+    override fun close() {
+    }
+
+    override fun commit() {
+    }
+
     private class UrlByteSource(private val url: URL, private val relative: String, private val offset: Int) : ByteSource() {
         override fun openStream(): InputStream = URL(url.protocol, url.host, url.port, "${url.path}/$relative?${url.query}").openStream().also {
             ByteStreams.skipFully(it, offset.toLong())
