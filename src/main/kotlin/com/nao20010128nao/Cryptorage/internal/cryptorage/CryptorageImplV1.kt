@@ -7,8 +7,8 @@ import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.AesKeys
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
+import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import java.util.*
 
 internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage, Compressable {
