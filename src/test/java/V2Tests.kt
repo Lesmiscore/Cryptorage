@@ -3,6 +3,7 @@ import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import com.nao20010128nao.Cryptorage.internal.digest
+import com.nao20010128nao.Cryptorage.internal.trailing
 import com.nao20010128nao.Cryptorage.internal.utf8Bytes
 import com.nao20010128nao.Cryptorage.newMemoryFileSource
 import com.nao20010128nao.Cryptorage.withV2Encryption
@@ -128,11 +129,23 @@ class V2Tests {
         md.update(test, 1000000, test.size - 1000000)
         val hashed = md.digest()
 
-        val `is` = cryptorage.open("test", 1000000).openBufferedStream()
-        val read = ByteStreams.toByteArray(`is`)
-        `is`.close()
+        val read = cryptorage.open("test", 1000000).openBufferedStream().readBytes()
 
         assertEquals(hashed, md.digest(read))
+    }
+
+    @Test
+    fun testSkip2() {
+        val cryptorage = newMemoryFileSource().openForTest()
+        val test = "It's a small world".utf8Bytes()
+        val dest = cryptorage.put("test").openBufferedStream()
+        dest.write(test)
+        dest.close()
+        val last10 = test.trailing(10)
+
+        val skipped = cryptorage.open("test", test.size - last10.size).openBufferedStream().readBytes()
+        assertEquals(skipped, "mall world".utf8Bytes())
+        assertEquals(last10, "mall world".utf8Bytes())
     }
 
     @Test

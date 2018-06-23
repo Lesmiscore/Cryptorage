@@ -63,7 +63,7 @@ interface Cryptorage : FileSource, Closeable {
     fun gc()
 
     /** Flushes all content to FileSource */
-    fun commit()
+    override fun commit()
 
     /** Closes Cryptorage and release objects */
     override fun close()
