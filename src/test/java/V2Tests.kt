@@ -170,4 +170,66 @@ class V2Tests {
         assertTrue(cryptorageReopen.list().contains("file1"))
         assertTrue(cryptorageReopen.list().contains("file2"))
     }
+
+
+    @Test
+    fun testGc() {
+        val memory = newMemoryFileSource()
+        val cryptorage = memory.openForTest()
+        val payload = "It's a small world"
+
+        val test = payload.toByteArray()
+        // write encrypted files
+        run {
+            val file = cryptorage.put("file1").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        run {
+            val file = cryptorage.put("file2").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        run {
+            val file = cryptorage.put("file3").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        cryptorage.commit()
+        // write extra files
+        run {
+            val file = memory.put("file1").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        run {
+            val file = memory.put("file2").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        run {
+            val file = memory.put("file3").openBufferedStream()
+            file.write(test)
+            file.close()
+        }
+        // gc now
+        cryptorage.gc()
+        // check for removed files
+        assertTrue(!memory.list().contains("file1"))
+        assertTrue(!memory.list().contains("file2"))
+        assertTrue(!memory.list().contains("file3"))
+        // check for alive files
+        run {
+            val file1 = cryptorage.open("file1").openStream().readBytes()
+            assertEquals(file1, test)
+        }
+        run {
+            val file1 = cryptorage.open("file2").openStream().readBytes()
+            assertEquals(file1, test)
+        }
+        run {
+            val file1 = cryptorage.open("file3").openStream().readBytes()
+            assertEquals(file1, test)
+        }
+    }
 }
