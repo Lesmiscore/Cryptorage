@@ -63,6 +63,9 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             if (!has(from)) {
                 fileNotFound(from)
             }
+            if (from == to) {
+                return
+            }
             if (has(to)) {
                 delete(to)
             }
