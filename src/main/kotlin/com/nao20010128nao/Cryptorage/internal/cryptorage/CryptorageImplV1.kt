@@ -70,6 +70,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                 delete(to)
             }
             index.files[to] = index.files[from]!!
+            index.files.remove(from)
         }
     }
 
