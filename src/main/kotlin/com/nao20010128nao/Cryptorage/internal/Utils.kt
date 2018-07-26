@@ -37,7 +37,7 @@ internal inline fun ByteArray.toUUIDHashed(): String = UUID.nameUUIDFromBytes(th
 internal inline fun ByteArray.toBigInteger(): BigInteger = BigInteger(this)
 
 internal inline fun readOnly(what: String): Nothing = throw Error("This $what is read-only.")
-internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is unsupported by this $what.")
+internal inline fun unsupported(what: String, op: String): Nothing = throw Error("The $op operation is not supported by this $what.")
 internal inline fun closed(what: String): Nothing = throw Error("This $what is already closed.")
 internal inline fun fileNotFound(what: String): Nothing = throw FileNotFoundException(what)
 

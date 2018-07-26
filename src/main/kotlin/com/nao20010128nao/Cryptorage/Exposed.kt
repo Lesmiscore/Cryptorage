@@ -6,10 +6,7 @@ import com.nao20010128nao.Cryptorage.internal.cryptorage.CombinedCryptorage
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV1
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV2
 import com.nao20010128nao.Cryptorage.internal.cryptorage.ReadOnlyCryptorage
-import com.nao20010128nao.Cryptorage.internal.file.DirectoryFileSource
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
-import com.nao20010128nao.Cryptorage.internal.file.MemoryFileSource
-import com.nao20010128nao.Cryptorage.internal.file.UrlFileSource
+import com.nao20010128nao.Cryptorage.internal.file.*
 import com.nao20010128nao.Cryptorage.internal.middle.Base64MiddleFileSource
 import com.nao20010128nao.Cryptorage.internal.middle.ReadOnlyFileSource
 import java.io.File
@@ -35,6 +32,9 @@ fun URL.asFileSource(): FileSource = UrlFileSource(this)
 
 /** Treats file system as FileSource */
 fun File.asFileSource(): FileSource = DirectoryFileSource(this)
+
+/** Treats a file as ZIP file and read its content */
+fun File.asZipFileSource() : FileSource = ZipFileSource(this)
 
 /** Makes a virtual FileSource on memory */
 fun newMemoryFileSource(): FileSource = MemoryFileSource()
