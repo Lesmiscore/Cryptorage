@@ -62,7 +62,7 @@ internal inline fun ByteArray.toHex(): String = joinToString("") { "%02x".format
 
 internal inline fun InputStream.digest(algo: String = "sha-256"): String {
     val md = MessageDigest.getInstance(algo)
-    try {
+    use {
         val buf = ByteArray(8192)
         var r: Int
         while (true) {
@@ -72,8 +72,6 @@ internal inline fun InputStream.digest(algo: String = "sha-256"): String {
             }
             md.update(buf, 0, r)
         }
-    } finally {
-        close()
     }
     return md.digest().toHex()
 }
