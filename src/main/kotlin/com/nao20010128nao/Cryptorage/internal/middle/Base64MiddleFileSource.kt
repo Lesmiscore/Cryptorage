@@ -10,6 +10,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class Base64MiddleFileSource(override val source: FileSource) : MiddleFileSource {
+
     override fun list(): Array<String> = source.list()
 
     override fun open(name: String, offset: Int): ByteSource = object : ByteSource() {
@@ -27,4 +28,8 @@ class Base64MiddleFileSource(override val source: FileSource) : MiddleFileSource
 
     override val isReadOnly: Boolean
         get() = source.isReadOnly
+
+    override fun lastModified(name: String): Long = source.lastModified(name)
+
+    override fun size(name: String): Long = (source.size(name) * 3).shr(2)
 }

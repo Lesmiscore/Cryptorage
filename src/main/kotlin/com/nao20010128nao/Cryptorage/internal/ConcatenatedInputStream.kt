@@ -6,7 +6,7 @@ import java.io.InputStream
 /**
  * SequenceInputStream that takes Iterator as input
  * */
-internal class ConcatenatedInputStream(private val e: Iterator<InputStream>) : InputStream() {
+class ConcatenatedInputStream(private val e: Iterator<InputStream>) : InputStream() {
     private var current: InputStream? = null
 
     init {
