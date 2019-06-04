@@ -14,7 +14,10 @@ internal class CombinedCryptorage(val cryptorages: List<Cryptorage>) : Cryptorag
     override fun open(name: String, offset: Int): ByteSource = cryptorages.firstNonNull { it.open(name, offset) }!!
     override fun open(name: String): ByteSource = cryptorages.firstNonNull { it.open(name) }!!
     override fun has(name: String): Boolean = cryptorages.firstNonNull { it.has(name) } == true
-    override fun lastModified(name: String): Long = cryptorages.firstNonNull { it.lastModified(name) }!!
+    override fun lastModified(name: String): Long = cryptorages.firstNonNull {
+        it.size(name).let { aa -> if (aa < 0) null else aa }
+    } ?: -1
+
     override fun size(name: String): Long = cryptorages.firstNonNull {
         it.size(name).let { aa -> if (aa < 0) null else aa }
     } ?: -1
