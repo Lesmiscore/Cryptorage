@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.nao20010128nao.Cryptorage
 
 import com.google.common.io.ByteSink
@@ -31,10 +33,10 @@ interface Cryptorage : FileSource, Closeable {
     override fun has(name: String): Boolean = list().contains(name)
 
     /** Gets last modified date and time */
-    fun lastModified(name: String): Long
+    override fun lastModified(name: String): Long
 
     /** Gets the size */
-    fun size(name: String): Long
+    override fun size(name: String): Long
 
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean

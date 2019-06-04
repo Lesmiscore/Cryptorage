@@ -9,5 +9,6 @@ build/*
 out/
 */out/
 */build/*
+gradle.properties
 
 !*.java

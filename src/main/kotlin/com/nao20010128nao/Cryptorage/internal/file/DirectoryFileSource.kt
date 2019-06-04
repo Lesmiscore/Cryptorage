@@ -10,6 +10,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 internal class DirectoryFileSource(private val dir: File) : FileSource {
+
     /** Lists up file names */
     override fun list(): Array<String> = dir.list() ?: emptyArray()
 
@@ -29,6 +30,10 @@ internal class DirectoryFileSource(private val dir: File) : FileSource {
 
     override fun commit() {
     }
+
+    override fun lastModified(name: String): Long = createFileObj(name).lastModified()
+
+    override fun size(name: String): Long = createFileObj(name).length()
 
     /** Checks Cryptorage is read-only */
     override val isReadOnly: Boolean

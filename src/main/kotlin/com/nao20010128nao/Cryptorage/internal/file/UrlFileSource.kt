@@ -45,6 +45,10 @@ internal class UrlFileSource(private val url: URL) : FileSource {
     override fun commit() {
     }
 
+    override fun lastModified(name: String): Long = -1
+
+    override fun size(name: String): Long = -1
+
     private class UrlByteSource(private val url: URL, private val relative: String, private val offset: Int) : ByteSource() {
         override fun openStream(): InputStream = URL(url.protocol, url.host, url.port, "${url.path}/$relative?${url.query}").openStream().also {
             ByteStreams.skipFully(it, offset.toLong())

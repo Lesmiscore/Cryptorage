@@ -32,4 +32,10 @@ interface FileSource : Closeable {
 
     /** Checks Cryptorage is read-only */
     val isReadOnly: Boolean
+
+    /** Gets last modified date and time */
+    fun lastModified(name: String): Long
+
+    /** Gets the size */
+    fun size(name: String): Long
 }

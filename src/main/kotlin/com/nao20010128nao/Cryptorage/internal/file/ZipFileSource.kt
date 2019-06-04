@@ -31,6 +31,10 @@ internal class ZipFileSource(file: File) : FileSource {
         }
     }
 
+    override fun lastModified(name: String): Long = zf.getEntry(name)?.lastModifiedTime?.toMillis() ?: -1
+
+    override fun size(name: String): Long = zf.getEntry(name)?.size ?: -1
+
     override fun put(name: String): ByteSink = unsupported("FileSource", "put")
 
     override fun delete(name: String) = unsupported("FileSource", "delete")
