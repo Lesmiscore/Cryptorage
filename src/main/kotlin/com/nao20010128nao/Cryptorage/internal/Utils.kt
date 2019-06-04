@@ -11,6 +11,7 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.security.SecureRandom
 import java.util.*
 
 
@@ -28,9 +29,14 @@ internal inline fun ByteArray.crop(off: Int, len: Int): ByteArray {
 
 internal inline fun ByteSource.asCharSource(): CharSource = this.asCharSource(StandardCharsets.UTF_8)
 
+private inline fun randomBytes(bytes: Int): ByteArray {
+    val b = ByteArray(bytes)
+    SecureRandom().nextBytes(b)
+    return b
+}
+
 /* Caution: this has no grantee not to be duplicate */
-internal inline fun generateRandomName(): String =
-        "${UUID.randomUUID()}${UUID.randomUUID()}".replace("-", "")
+internal inline fun generateRandomName(): String = randomBytes(32).toHex()
 
 internal inline fun ByteArray.digest(algo: String = "sha-256"): ByteArray = MessageDigest.getInstance(algo).digest(this)
 internal inline fun ByteArray.toUUIDHashed(): String = UUID.nameUUIDFromBytes(this).toString()
