@@ -8,6 +8,7 @@ import com.google.common.io.ByteStreams
 import com.google.common.io.CharSource
 import java.io.FileNotFoundException
 import java.io.InputStream
+import java.io.OutputStream
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -89,3 +90,8 @@ internal inline operator fun <K, V> Multimap<K, V>.set(k: K, v: V) {
 internal inline fun InputStream.skip(length: Int): InputStream = also {
     ByteStreams.skipFully(this, length.toLong())
 }
+
+internal inline fun OutputStream.regulated(
+        splitChunk: Int = 8192,
+        splitThreshold: Int = 16384
+): OutputStream = RegulatedOutputStream(this, splitChunk, splitThreshold)

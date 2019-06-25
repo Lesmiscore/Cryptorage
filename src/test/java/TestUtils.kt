@@ -2,6 +2,8 @@ import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import java.io.IOException
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -59,5 +61,39 @@ fun FileSource.fakeWrap(): Cryptorage {
         override fun put(name: String): ByteSink = this@fakeWrap.put(name)
 
         override fun size(name: String): Long = this@fakeWrap.size(name)
+    }
+}
+
+fun checkFromIndexSize(offset: Int, size: Int, length: Int): Int {
+    if (length or offset or size < 0 || size > length - offset)
+        throw IndexOutOfBoundsException( "offset: $offset, size: $size, length: $length")
+    return offset
+}
+fun nullOutputStream(): OutputStream {
+    return object : OutputStream() {
+        @Volatile
+        private var closed: Boolean = false
+
+        @Throws(IOException::class)
+        private fun ensureOpen() {
+            if (closed) {
+                throw IOException("Stream closed")
+            }
+        }
+
+        @Throws(IOException::class)
+        override fun write(b: Int) {
+            ensureOpen()
+        }
+
+        @Throws(IOException::class)
+        override fun write(b: ByteArray, off: Int, len: Int) {
+            checkFromIndexSize(off, len, b.size)
+            ensureOpen()
+        }
+
+        override fun close() {
+            closed = true
+        }
     }
 }

@@ -54,7 +54,7 @@ internal abstract class ChainedEncryptorBase(private val source: FileSource, pri
                     next(next)
                 }, {
                     closeCurrent(it)
-                })
+                }).regulated()
                 if (overflow != null) {
                     filling!!.write(overflow.buffer)
                 }
