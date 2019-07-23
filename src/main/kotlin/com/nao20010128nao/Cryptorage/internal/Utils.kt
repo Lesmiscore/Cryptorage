@@ -2,6 +2,8 @@
 
 package com.nao20010128nao.Cryptorage.internal
 
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Klaxon
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
@@ -9,6 +11,7 @@ import com.google.common.io.CharSource
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.io.OutputStream
+import java.io.Reader
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -95,3 +98,7 @@ internal inline fun OutputStream.regulated(
         splitChunk: Int = 8192,
         splitThreshold: Int = 16384
 ): OutputStream = RegulatedOutputStream(this, splitChunk, splitThreshold)
+
+internal val klaxon = Klaxon()
+internal inline fun parseJson(text: String): JsonObject = klaxon.parseJsonObject(text.reader())
+internal inline fun parseJson(rdr: Reader): JsonObject = klaxon.parseJsonObject(rdr)

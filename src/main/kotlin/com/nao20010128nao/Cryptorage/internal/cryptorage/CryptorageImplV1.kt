@@ -182,7 +182,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
 
 
     private fun readIndex(): Index = if (source.has(MANIFEST)) {
-        val data = (Parser().parse(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
+        val data = (parseJson(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream()) as JsonObject)
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
         Index(files.toMutableMap(), meta.toMutableMap())
