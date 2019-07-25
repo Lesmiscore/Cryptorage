@@ -186,7 +186,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
             return Index(hashMapOf(), hashMapOf())
         val nameIter = manifestFilenameIterator().takeWhile { source.has(it) }.iterator()
         val reader = ChainedDecryptor(source, keysManifest, nameIter)
-        val data = (parseJson(reader.asCharSource().openStream()) as JsonObject)
+        val data = parseJson(reader.asCharSource().openStream())
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
         return Index(files.toMutableMap(), meta.toMutableMap())
