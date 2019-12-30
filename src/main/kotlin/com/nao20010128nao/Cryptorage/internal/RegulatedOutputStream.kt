@@ -20,7 +20,7 @@ class RegulatedOutputStream(
             for (i in (0..len / splitChunk)) {
                 val newOffset = off + splitChunk * i
                 val newLen = min(splitChunk, len - splitChunk * i)
-                if (newLen == 0) {
+                if (newLen <= 0) {
                     break
                 }
                 base.write(b, newOffset, newLen)
