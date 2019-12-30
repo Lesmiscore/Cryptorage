@@ -6,6 +6,7 @@ import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.AesKeys
 import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import java.io.FilterOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -41,22 +42,20 @@ internal abstract class ChainedEncryptorBase(private val source: FileSource, pri
         }
         onStartWrite()
         commit()
-        current = object : OutputStream() {
-            var filling: OutputStream? = null
-
+        current = object : FilterOutputStream(null) {
             init {
                 next(null)
             }
 
             private fun next(overflow: SizeLimitedOutputStream.Overflow?) {
-                filling = SizeLimitedOutputStream(size, { me, next ->
+                this.out = SizeLimitedOutputStream(size, { me, next ->
                     closeCurrent(me)
                     next(next)
                 }, {
                     closeCurrent(it)
                 }).regulated()
                 if (overflow != null) {
-                    filling!!.write(overflow.buffer)
+                    write(overflow.buffer)
                 }
             }
 
@@ -68,22 +67,6 @@ internal abstract class ChainedEncryptorBase(private val source: FileSource, pri
                 }
                 onFileEnded(randName, me.size())
                 commit()
-            }
-
-            override fun write(p0: Int) {
-                filling!!.write(p0)
-            }
-
-            override fun write(p0: ByteArray?) {
-                filling!!.write(p0)
-            }
-
-            override fun write(p0: ByteArray?, p1: Int, p2: Int) {
-                filling!!.write(p0, p1, p2)
-            }
-
-            override fun close() {
-                filling!!.close()
             }
         }
         return current!!
