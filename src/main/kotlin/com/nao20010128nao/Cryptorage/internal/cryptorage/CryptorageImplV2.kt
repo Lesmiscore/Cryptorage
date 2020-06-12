@@ -7,7 +7,7 @@ import com.nao20010128nao.Cryptorage.AesKeys
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.internal.*
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import com.nao20010128nao.Cryptorage.FileSource
 import org.bitcoinj.core.ECKey
 import java.io.FileNotFoundException
 import java.security.SecureRandom
@@ -47,7 +47,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     private var hasClosed: Boolean = false
 
     /** Lists up file names */
-    override fun list(): Array<String> = notClosed { index.files.keys.sorted().toTypedArray() }
+    override fun list(): List<String> = notClosed { index.files.keys.toList() }
 
     /** Opens file for reading */
     override fun open(name: String, offset: Int): ByteSource {
@@ -131,7 +131,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     /** Removes unused files */
     override fun gc() {
         notClosed {
-            val ls = source.list().asList()
+            val ls = source.list()
             val unused = ls - index.files.flatMap { it.value.files } - manifestFilenameIterator().takeWhile { source.has(it) }
             unused.forEach {
                 source.delete(it)

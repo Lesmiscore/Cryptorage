@@ -1,7 +1,7 @@
 import com.google.common.io.ByteStreams
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV2
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import com.nao20010128nao.Cryptorage.FileSource
 import com.nao20010128nao.Cryptorage.internal.digest
 import com.nao20010128nao.Cryptorage.internal.trailing
 import com.nao20010128nao.Cryptorage.internal.utf8Bytes

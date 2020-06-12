@@ -4,7 +4,6 @@ package com.nao20010128nao.Cryptorage
 
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
 import java.io.Closeable
 
 /** Encrypted storage */
@@ -15,7 +14,7 @@ interface Cryptorage : FileSource, Closeable {
     }
 
     /** Lists up file names */
-    override fun list(): Array<String>
+    override fun list(): List<String>
 
     /** Opens file for reading */
     override fun open(name: String, offset: Int): ByteSource

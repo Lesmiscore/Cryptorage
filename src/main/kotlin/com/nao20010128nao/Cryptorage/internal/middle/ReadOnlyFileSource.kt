@@ -1,7 +1,7 @@
 package com.nao20010128nao.Cryptorage.internal.middle
 
 import com.google.common.io.ByteSink
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import com.nao20010128nao.Cryptorage.FileSource
 import com.nao20010128nao.Cryptorage.internal.readOnly
 
 internal class ReadOnlyFileSource(override val source: FileSource) : FileSource by source, MiddleFileSource {

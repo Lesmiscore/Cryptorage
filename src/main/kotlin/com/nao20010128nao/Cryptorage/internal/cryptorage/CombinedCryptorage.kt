@@ -10,7 +10,9 @@ internal class CombinedCryptorage(val cryptorages: List<Cryptorage>) : Cryptorag
     constructor(vararg cs: Cryptorage) : this(cs.asList())
 
     override val isReadOnly: Boolean = true
-    override fun list(): Array<String> = cryptorages.flatMap { it.list().asList() }.distinct().toTypedArray()
+    override fun list(): List<String> = cryptorages.asSequence()
+            .flatMap { it.list().asSequence() }
+            .distinct().toList()
     override fun open(name: String, offset: Int): ByteSource = cryptorages.firstNonNull { it.open(name, offset) }!!
     override fun open(name: String): ByteSource = cryptorages.firstNonNull { it.open(name) }!!
     override fun has(name: String): Boolean = cryptorages.fold(false) { acc, obj -> acc or obj.has(name) }

@@ -1,8 +1,11 @@
+@file:Suppress("UnstableApiUsage")
+
 package com.nao20010128nao.Cryptorage.internal.file
 
 import com.google.common.base.Optional
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
+import com.nao20010128nao.Cryptorage.FileSource
 import com.nao20010128nao.Cryptorage.internal.unsupported
 import java.io.File
 import java.io.InputStream
@@ -19,7 +22,7 @@ internal class ZipFileSource(file: File) : FileSource {
     override fun commit() {
     }
 
-    override fun list(): Array<String> = zf.entries().asSequence().map { it.name }.toList().toTypedArray()
+    override fun list(): List<String> = zf.entries().asSequence().map { it.name }.toList()
 
     override fun open(name: String, offset: Int): ByteSource = object : ByteSource() {
         val entry = zf.getEntry(name)!!

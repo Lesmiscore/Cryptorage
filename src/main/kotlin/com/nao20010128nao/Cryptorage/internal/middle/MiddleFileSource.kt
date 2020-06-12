@@ -1,6 +1,6 @@
 package com.nao20010128nao.Cryptorage.internal.middle
 
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import com.nao20010128nao.Cryptorage.FileSource
 
 internal interface MiddleFileSource : FileSource {
     val source: FileSource

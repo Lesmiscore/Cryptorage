@@ -1,7 +1,7 @@
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.Cryptorage
-import com.nao20010128nao.Cryptorage.internal.file.FileSource
+import com.nao20010128nao.Cryptorage.FileSource
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
@@ -46,7 +46,7 @@ fun FileSource.fakeWrap(): Cryptorage {
 
         override fun lastModified(name: String): Long = this@fakeWrap.lastModified(name)
 
-        override fun list(): Array<String> = this@fakeWrap.list()
+        override fun list(): List<String> = this@fakeWrap.list()
 
         override fun meta(key: String): String? = null
 

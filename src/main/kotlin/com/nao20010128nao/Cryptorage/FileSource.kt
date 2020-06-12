@@ -1,4 +1,4 @@
-package com.nao20010128nao.Cryptorage.internal.file
+package com.nao20010128nao.Cryptorage
 
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
@@ -7,7 +7,7 @@ import java.io.Closeable
 /** Source of files (e.g. file system, web server...) */
 interface FileSource : Closeable {
     /** Lists up file names */
-    fun list(): Array<String>
+    fun list(): List<String>
 
     /** Opens file for reading with offset and less overhead */
     fun open(name: String, offset: Int): ByteSource

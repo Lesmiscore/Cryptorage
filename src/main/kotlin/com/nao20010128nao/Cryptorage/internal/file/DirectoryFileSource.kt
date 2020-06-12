@@ -4,6 +4,7 @@ import com.google.common.base.Optional
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.google.common.io.ByteStreams
+import com.nao20010128nao.Cryptorage.FileSource
 import com.nao20010128nao.Cryptorage.internal.createSizeLimitedMap
 import java.io.File
 import java.io.InputStream
@@ -12,7 +13,7 @@ import java.io.OutputStream
 internal class DirectoryFileSource(private val dir: File) : FileSource {
 
     /** Lists up file names */
-    override fun list(): Array<String> = dir.list() ?: emptyArray()
+    override fun list(): List<String> = (dir.list() ?: emptyArray()).asList()
 
     /** Deletes file(s) */
     override fun delete(name: String) {
