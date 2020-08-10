@@ -13,6 +13,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.Reader
 import java.math.BigInteger
+import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -104,3 +105,6 @@ internal inline fun parseJson(text: String): JsonObject = klaxon.parseJsonObject
 internal inline fun parseJson(rdr: Reader): JsonObject = klaxon.parseJsonObject(rdr)
 
 internal fun String.addPrefix(prefix: String): String = if (startsWith(prefix)) this else prefix + this
+
+internal fun URL.relativeURL(relative: String): URL = URL(protocol, host, port, "$path/$relative".replace("//", "/") +
+        (query?.addPrefix("?") ?: ""))

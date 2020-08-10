@@ -4,13 +4,13 @@ import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.FileSource
 import java.io.IOException
 import java.io.OutputStream
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.util.*
 
-val utf8 = StandardCharsets.UTF_8!!
+val utf8: Charset = StandardCharsets.UTF_8
 
 fun assertEquals(a: ByteArray, b: ByteArray) {
-    require(Arrays.equals(a, b))
+    require(a.contentEquals(b))
 }
 
 fun assertEquals(a: Long, b: Long) {
