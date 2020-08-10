@@ -103,4 +103,4 @@ internal val klaxon = Klaxon()
 internal inline fun parseJson(text: String): JsonObject = klaxon.parseJsonObject(text.reader())
 internal inline fun parseJson(rdr: Reader): JsonObject = klaxon.parseJsonObject(rdr)
 
-internal fun String.addPrefix(prefix:String):String=if(startsWith(prefix))this else prefix+this
+internal fun String.addPrefix(prefix: String): String = if (startsWith(prefix)) this else prefix + this

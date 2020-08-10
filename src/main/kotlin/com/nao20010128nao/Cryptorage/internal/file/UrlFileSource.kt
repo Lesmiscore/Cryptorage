@@ -13,18 +13,18 @@ import java.net.URL
 
 internal class UrlFileSource(private val url: URL) : FileSource {
     override fun has(name: String): Boolean =
-            URL(url.protocol, url.host, url.port, "${url.path}/$name${url.query?.addPrefix("?")?: "" }")
+            URL(url.protocol, url.host, url.port, "${url.path}/$name${url.query?.addPrefix("?") ?: ""}")
                     .openConnection()!!.also {
-                (it as HttpURLConnection).requestMethod = "HEAD"
-            }.let {
-                try {
-                    it.connect()
-                    it.inputStream.close()/* HEAD mustn't have body so no bytes to read. */
-                    true
-                } catch (e: Throwable) {
-                    false
-                }
-            }
+                        (it as HttpURLConnection).requestMethod = "HEAD"
+                    }.let {
+                        try {
+                            it.connect()
+                            it.inputStream.close()/* HEAD mustn't have body so no bytes to read. */
+                            true
+                        } catch (e: Throwable) {
+                            false
+                        }
+                    }
 
     /** Deletes file(s) */
     override fun delete(name: String): Unit = readOnly("FileSource")
@@ -52,7 +52,7 @@ internal class UrlFileSource(private val url: URL) : FileSource {
     override fun size(name: String): Long = -1
 
     private class UrlByteSource(private val url: URL, private val relative: String, private val offset: Int) : ByteSource() {
-        override fun openStream(): InputStream = URL(url.protocol, url.host, url.port, "${url.path}/$relative?${url.query?.addPrefix("?")?: ""}").openStream().also {
+        override fun openStream(): InputStream = URL(url.protocol, url.host, url.port, "${url.path}/$relative?${url.query?.addPrefix("?") ?: ""}").openStream().also {
             ByteStreams.skipFully(it, offset.toLong())
         }
     }
