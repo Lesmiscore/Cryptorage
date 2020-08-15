@@ -19,7 +19,12 @@ internal class UrlFileSource(private val url: URL) : FileSource {
                 try {
                     it.connect()
                     it.inputStream.close()/* HEAD mustn't have body so no bytes to read. */
-                    true
+                    try {
+                        open(name).openStream().close()
+                        true
+                    } catch (e: Throwable) {
+                        false
+                    }
                 } catch (e: Throwable) {
                     false
                 }
