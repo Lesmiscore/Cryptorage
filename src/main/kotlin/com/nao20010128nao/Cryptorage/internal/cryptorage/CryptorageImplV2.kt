@@ -184,6 +184,8 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     private fun readIndex(): Index {
         if (!source.has(deriveManifestFilename(pwSha, 0)))
             return Index(hashMapOf(), hashMapOf())
+        if (source.isReadOnly)
+            error("Cannot create Cryptorage")
         val nameIter = manifestFilenameIterator().takeWhile { source.has(it) }.iterator()
         val reader = ChainedDecryptor(source, keysManifest, nameIter)
         val data = parseJson(reader.asCharSource().openStream())

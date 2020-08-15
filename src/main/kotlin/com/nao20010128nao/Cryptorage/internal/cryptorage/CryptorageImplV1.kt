@@ -186,8 +186,10 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
         Index(files.toMutableMap(), meta.toMutableMap())
-    } else {
+    } else if (!source.isReadOnly) {
         Index(hashMapOf(), hashMapOf())
+    } else {
+        error("Cannot create Cryptorage")
     }
 
     private inline fun <T> notClosed(f: () -> T): T {
