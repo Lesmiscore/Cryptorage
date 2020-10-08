@@ -248,7 +248,7 @@ internal class CryptorageImplV3(private val source: FileSource, private val keys
 
         override fun onFileEnded(name: String, size: Int, keys: AesKeys) {
             file.files.add(name)
-            val xor = (keys.second xor baseKeys.second).reversedArray()
+            val xor = (keys.second xor baseKeys.second)
             file.nonce.add(xor.toBigInteger())
             file.size += size
         }

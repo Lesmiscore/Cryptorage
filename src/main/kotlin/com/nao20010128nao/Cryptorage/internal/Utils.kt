@@ -116,8 +116,8 @@ internal infix fun ByteArray.xor(num: BigInteger): ByteArray {
     if (num.signum() == 0) return this
     val result = copyOf()
     var tmp = num
-    var cursor = 0
-    while (tmp.signum() != 0 && cursor < size) {
+    var cursor = size - 1
+    while (tmp.signum() != 0 && cursor >= 0) {
         val (d, r) = tmp.divideAndRemainder(WTY)
         tmp = d
         result[cursor] = result[cursor] xor r.toByte()
