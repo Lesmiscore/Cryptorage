@@ -11,6 +11,18 @@ interface Cryptorage : FileSource, Closeable {
     companion object {
         /** Split size for larger files */
         const val META_SPLIT_SIZE: String = "split_size"
+
+        /** Nonce generation mode (only for V3)
+         *
+         * valid meta values are "sequential", "random"
+         * */
+        const val META_NONCE_MODE: String = "nonce_mode"
+
+        /** Last generated nonce (only for V3) */
+        const val META_LAST_NONCE: String = "last_nonce"
+
+        const val NONCE_MODE_SEQUENTIAL: String = "sequential"
+        const val NONCE_MODE_RANDOM: String = "random"
     }
 
     /** Lists up file names */

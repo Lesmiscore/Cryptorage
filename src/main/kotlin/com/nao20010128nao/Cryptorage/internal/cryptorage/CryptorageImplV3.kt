@@ -1,17 +1,22 @@
 package com.nao20010128nao.Cryptorage.internal.cryptorage
 
 import com.beust.klaxon.JsonObject
-import com.google.common.collect.HashMultimap
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.AesKeys
 import com.nao20010128nao.Cryptorage.Cryptorage
+import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_LAST_NONCE
+import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_NONCE_MODE
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
+import com.nao20010128nao.Cryptorage.Cryptorage.Companion.NONCE_MODE_RANDOM
+import com.nao20010128nao.Cryptorage.Cryptorage.Companion.NONCE_MODE_SEQUENTIAL
 import com.nao20010128nao.Cryptorage.FileSource
 import com.nao20010128nao.Cryptorage.internal.*
+import java.math.BigInteger
 import java.util.*
+import kotlin.collections.ArrayList
 
-internal class CryptorageImplV1(private val source: FileSource, private val keys: AesKeys) : Cryptorage, Compressable {
+internal class CryptorageImplV3(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
     companion object {
         const val MANIFEST: String = "manifest"
         const val SPLIT_SIZE_DEFAULT: Int = 100 * 1024 /* 100kb */ - 16 /* Final block size */
@@ -40,7 +45,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             val file = index.files[name]!!
             val indexOffset: Int = offset / file.splitSize
             val fileOffset: Int = offset % file.splitSize
-            ChainedDecryptorStaticKey(source, keys, file.files.drop(indexOffset), fileOffset, file.size - offset)
+            ChainedDecryptor(source, keys, file.nonce.drop(indexOffset), file.files.drop(indexOffset), fileOffset, file.size - offset)
         }
     }
 
@@ -51,9 +56,27 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
                 delete(name)
             }
             val splitSize = index.meta[META_SPLIT_SIZE]?.toInt() ?: SPLIT_SIZE_DEFAULT
+            var lastNonce = index.meta[META_LAST_NONCE]?.toBigIntegerOrNull() ?: BigInteger.ONE
+            val nonceMode = index.meta[META_NONCE_MODE] ?: NONCE_MODE_SEQUENTIAL
             val file = CryptorageFile(splitSize = splitSize)
             index.files[name] = file
-            ChainedEncryptor(source, splitSize, keys, file) { }
+            ChainedEncryptor(source, splitSize, keys, file, { }, {
+                val nextNonce = when (nonceMode) {
+                    NONCE_MODE_SEQUENTIAL -> {
+                        val ln = lastNonce
+                        lastNonce += BigInteger.ONE
+                        index.meta[META_LAST_NONCE] = "$lastNonce"
+                        ln
+                    }
+                    NONCE_MODE_RANDOM -> {
+                        ByteArray(keys.second.size).also {
+                            sr.nextBytes(it)
+                        }.toBigInteger()
+                    }
+                    else -> BigInteger.ZERO
+                }
+                keys.copy(second = keys.second xor nextNonce)
+            })
         }
     }
 
@@ -151,36 +174,6 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
         hasClosed = true
     }
 
-    override fun doCompress() {
-        notClosed {
-            val allFiles = index.files.flatMap { it.value.files }
-            val hashes = HashMultimap.create<String, String>()
-            // calculate hash for all files
-            allFiles.forEach {
-                hashes[source.open(it).openStream().digest()] = it
-            }
-            // create table to replace
-            val replaceTable = hashMapOf<String, String>()
-            hashes.keys().elementSet().forEach { value ->
-                val values = hashes[value].toList()
-                val leader = values.first()
-                val files = values.drop(1)
-                files.forEach {
-                    replaceTable[it] = leader
-                }
-            }
-            // update all file list with first one: we wont re-write files
-            index.files.forEach { _, cryptorageFile ->
-                cryptorageFile.files.replaceAll { replaceTable[it] ?: it }
-            }
-            // remove unreferenced files
-            replaceTable.keys.forEach {
-                source.delete(it)
-            }
-        }
-    }
-
-
     private fun readIndex(): Index = if (source.has(MANIFEST)) {
         val data = parseJson(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream())
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
@@ -200,6 +193,7 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
 
     private fun CryptorageFile.toJsonMap(): Map<String, Any> = mapOf(
             "files" to files,
+            "nonce" to nonce.map { "$it" },
             "splitSize" to splitSize,
             "lastModified" to lastModified,
             "size" to size
@@ -213,17 +207,33 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             val meta: MutableMap<String, String>
     )
 
-    private data class CryptorageFile(val files: MutableList<String> = ArrayList(), val splitSize: Int = 0, var lastModified: Long = 0, var size: Long = 0) {
+    private data class CryptorageFile(
+            val files: MutableList<String> = ArrayList(),
+            val nonce: MutableList<BigInteger> = ArrayList(),
+            val splitSize: Int = 0,
+            var lastModified: Long = 0,
+            var size: Long = 0
+    ) {
         constructor(file: JsonObject) :
-                this(file.array<String>("files")!!.toMutableList(), file.int("splitSize")!!, file.long("lastModified")!!, file.long("size")!!)
+                this(
+                        file.array<String>("files")!!.toMutableList(),
+                        // allow reading V1 cryptorage (V1 is also acceptable as V3, with all nonce are zero)
+                        (file.array<String>("nonce")?.map { it.toBigInteger() }
+                                ?: List<BigInteger>(file.array<String>("files")!!.size) { BigInteger.ZERO })
+                                .toMutableList(),
+                        file.int("splitSize")!!,
+                        file.long("lastModified")!!,
+                        file.long("size")!!
+                )
     }
 
     private class ChainedEncryptor(
             private val source: FileSource,
             size: Int,
-            private val keys: AesKeys,
+            private val baseKeys: AesKeys,
             private val file: CryptorageFile,
-            private val commitR: () -> Unit
+            private val commitR: () -> Unit,
+            private val nextKey: () -> AesKeys,
     ) : ChainedEncryptorBase(source, size) {
         override fun onRewrite() {
             file.files.forEach {
@@ -238,6 +248,8 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
 
         override fun onFileEnded(name: String, size: Int, keys: AesKeys) {
             file.files.add(name)
+            val xor = (keys.second xor baseKeys.second).reversedArray()
+            file.nonce.add(xor.toBigInteger())
             file.size += size
         }
 
@@ -245,6 +257,20 @@ internal class CryptorageImplV1(private val source: FileSource, private val keys
             commitR()
         }
 
-        override fun getNextKey(): AesKeys = keys
+        override fun getNextKey(): AesKeys = nextKey()
+    }
+
+    private class ChainedDecryptor(
+            source: FileSource,
+            val keys: AesKeys,
+            val ivNonce: List<BigInteger>,
+            val files: List<String>,
+            bytesToSkip: Int,
+            totalSize: Long?,
+    ) : ChainedDecryptorBase(source, files, bytesToSkip, totalSize) {
+        override fun getKeyForFile(file: String): AesKeys {
+            val nonce = ivNonce[files.indexOf(file)]
+            return keys.copy(second = keys.second xor nonce)
+        }
     }
 }

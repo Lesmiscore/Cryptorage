@@ -21,6 +21,10 @@ fun assertTrue(value: Boolean) {
     require(value)
 }
 
+fun assertNotEquals(a: ByteArray, b: ByteArray) {
+    require(!a.contentEquals(b))
+}
+
 fun ByteArray.toHex(): String = joinToString("") { "%02X".format(it) }
 
 

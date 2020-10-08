@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.*
+import kotlin.experimental.xor
 
 
 internal inline fun String.utf8Bytes(): ByteArray = toByteArray(StandardCharsets.UTF_8)
@@ -108,3 +109,30 @@ internal fun String.addPrefix(prefix: String): String = if (startsWith(prefix)) 
 
 internal fun URL.relativeURL(relative: String): URL = URL(protocol, host, port, "$path/$relative".replace("//", "/") +
         (query?.addPrefix("?") ?: ""))
+
+internal val WTY = 256.toBigInteger()
+
+internal infix fun ByteArray.xor(num: BigInteger): ByteArray {
+    if (num.signum() == 0) return this
+    val result = copyOf()
+    var tmp = num
+    var cursor = 0
+    while (tmp.signum() != 0 && cursor < size) {
+        val (d, r) = tmp.divideAndRemainder(WTY)
+        tmp = d
+        result[cursor] = result[cursor] xor r.toByte()
+        cursor++
+    }
+    return result
+}
+
+// this assumes this and b are the same length
+internal infix fun ByteArray.xor(b: ByteArray): ByteArray {
+    val result = copyOf()
+    for (i in indices) {
+        result[i] = result[i] xor b[i]
+    }
+    return result
+}
+
+internal val sr: SecureRandom by lazy { SecureRandom() }

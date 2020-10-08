@@ -1,13 +1,13 @@
 package com.nao20010128nao.Cryptorage.internal.cryptorage
 
-import com.beust.klaxon.*
+import com.beust.klaxon.JsonObject
 import com.google.common.io.ByteSink
 import com.google.common.io.ByteSource
 import com.nao20010128nao.Cryptorage.AesKeys
 import com.nao20010128nao.Cryptorage.Cryptorage
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
-import com.nao20010128nao.Cryptorage.internal.*
 import com.nao20010128nao.Cryptorage.FileSource
+import com.nao20010128nao.Cryptorage.internal.*
 import org.bitcoinj.core.ECKey
 import java.io.FileNotFoundException
 import java.security.SecureRandom
@@ -58,7 +58,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
             val file = index.files[name]!!
             val indexOffset: Int = offset / file.splitSize
             val fileOffset: Int = offset % file.splitSize
-            ChainedDecryptor(source, deriveKeys(pwSha, file.nonce), file.files.drop(indexOffset), fileOffset, file.size - offset)
+            ChainedDecryptorStaticKey(source, deriveKeys(pwSha, file.nonce), file.files.drop(indexOffset), fileOffset, file.size - offset)
         }
     }
 
@@ -187,7 +187,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
         if (source.isReadOnly)
             error("Cannot create Cryptorage")
         val nameIter = manifestFilenameIterator().takeWhile { source.has(it) }.iterator()
-        val reader = ChainedDecryptor(source, keysManifest, nameIter)
+        val reader = ChainedDecryptorStaticKey(source, keysManifest, nameIter)
         val data = parseJson(reader.asCharSource().openStream())
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
@@ -233,11 +233,11 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
     private class ChainedEncryptor(
             private val source: FileSource,
             size: Int,
-            keys: AesKeys,
+            private val keys: AesKeys,
             private val file: CryptorageFile,
             private val commitR: () -> Unit,
             private val filenameResolver: (() -> String?)? = null
-    ) : ChainedEncryptorBase(source, size, keys) {
+    ) : ChainedEncryptorBase(source, size) {
         override fun onRewrite() {
             file.files.forEach {
                 source.delete(it)
@@ -249,7 +249,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
             file.lastModified = System.currentTimeMillis()
         }
 
-        override fun onFileEnded(name: String, size: Int) {
+        override fun onFileEnded(name: String, size: Int, keys: AesKeys) {
             file.files.add(name)
             file.size += size
         }
@@ -259,6 +259,7 @@ internal class CryptorageImplV2(private val source: FileSource, password: String
         }
 
         override fun generateFileName(): String = filenameResolver?.invoke() ?: super.generateFileName()
+        override fun getNextKey(): AesKeys = keys
     }
 }
 

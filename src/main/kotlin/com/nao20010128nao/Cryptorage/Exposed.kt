@@ -2,11 +2,11 @@ package com.nao20010128nao.Cryptorage
 
 import com.nao20010128nao.Cryptorage.Cryptorage.Companion.META_SPLIT_SIZE
 import com.nao20010128nao.Cryptorage.internal.Compressable
-import com.nao20010128nao.Cryptorage.internal.cryptorage.CombinedCryptorage
-import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV1
-import com.nao20010128nao.Cryptorage.internal.cryptorage.CryptorageImplV2
-import com.nao20010128nao.Cryptorage.internal.cryptorage.ReadOnlyCryptorage
-import com.nao20010128nao.Cryptorage.internal.file.*
+import com.nao20010128nao.Cryptorage.internal.cryptorage.*
+import com.nao20010128nao.Cryptorage.internal.file.DirectoryFileSource
+import com.nao20010128nao.Cryptorage.internal.file.MemoryFileSource
+import com.nao20010128nao.Cryptorage.internal.file.UrlFileSource
+import com.nao20010128nao.Cryptorage.internal.file.ZipFileSource
 import com.nao20010128nao.Cryptorage.internal.middle.Base64MiddleFileSource
 import com.nao20010128nao.Cryptorage.internal.middle.ReadOnlyFileSource
 import java.io.File
@@ -50,6 +50,12 @@ fun FileSource.withV1Encryption(keys: AesKeys): Cryptorage = CryptorageImplV1(th
 
 /** Provides a heavier-but-hard-to-attack Cryptorage */
 fun FileSource.withV2Encryption(password: String): Cryptorage = CryptorageImplV2(this, password)
+
+/** Provides a Cryptorage with a different IV for each segments */
+fun FileSource.withV3Encryption(password: String): Cryptorage = CryptorageImplV3(this, password)
+
+/** Provides a Cryptorage with a different IV for each segments */
+fun FileSource.withV3Encryption(keys: AesKeys): Cryptorage = CryptorageImplV3(this, keys)
 
 /** Combines Cryptorages as one, not writable */
 fun List<Cryptorage>.combine(): Cryptorage = CombinedCryptorage(this)
