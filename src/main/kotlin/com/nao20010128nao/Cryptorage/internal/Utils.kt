@@ -121,7 +121,7 @@ internal infix fun ByteArray.xor(num: BigInteger): ByteArray {
         val (d, r) = tmp.divideAndRemainder(WTY)
         tmp = d
         result[cursor] = result[cursor] xor r.toByte()
-        cursor++
+        --cursor
     }
     return result
 }
