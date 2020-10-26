@@ -16,9 +16,10 @@ import java.math.BigInteger
 import java.util.*
 import kotlin.collections.ArrayList
 
-internal class CryptorageImplV3(private val source: FileSource, private val keys: AesKeys) : Cryptorage {
+internal class CryptorageImplV3(private val source: FileSource, private val keys: AesKeys, private val preferManifestNonce: Boolean) : Cryptorage {
     companion object {
         const val MANIFEST: String = "manifest"
+        const val MANIFEST_NONCE = "manifest_nonce"
         const val SPLIT_SIZE_DEFAULT: Int = 100 * 1024 /* 100kb */ - 16 /* Final block size */
 
         private fun populateKeys(password: String): AesKeys {
@@ -28,7 +29,7 @@ internal class CryptorageImplV3(private val source: FileSource, private val keys
         }
     }
 
-    constructor(source: FileSource, password: String) : this(source, populateKeys(password))
+    constructor(source: FileSource, password: String, preferManifestNonce: Boolean) : this(source, populateKeys(password), preferManifestNonce)
 
     private val index: Index = readIndex()
     private var hasClosed: Boolean = false
@@ -155,10 +156,20 @@ internal class CryptorageImplV3(private val source: FileSource, private val keys
 
     override fun commit() {
         notClosed {
+            val manifestKeys = if (source.has(MANIFEST_NONCE) || preferManifestNonce) {
+                val iv = ByteArray(keys.second.size).also {
+                    sr.nextBytes(it)
+                }
+                source.put(MANIFEST_NONCE).write(iv)
+                keys.copy(second = iv)
+            } else {
+                keys
+            }
+
             val root = JsonObject()
             root["files"] = index.files.mapValues { it.value.toJsonMap() }
             root["meta"] = index.meta
-            AesEncryptorByteSink(source.put(MANIFEST), keys)
+            AesEncryptorByteSink(source.put(MANIFEST), manifestKeys)
                     .write(root.toJsonString(false).utf8Bytes())
             source.commit()
         }
@@ -175,7 +186,13 @@ internal class CryptorageImplV3(private val source: FileSource, private val keys
     }
 
     private fun readIndex(): Index = if (source.has(MANIFEST)) {
-        val data = parseJson(AesDecryptorByteSource(source.open(MANIFEST), keys).asCharSource().openStream())
+        val manifestKeys = if (source.has(MANIFEST_NONCE)) {
+            val iv = source.open(MANIFEST_NONCE).read()
+            keys.copy(second = iv)
+        } else {
+            keys
+        }
+        val data = parseJson(AesDecryptorByteSource(source.open(MANIFEST), manifestKeys).asCharSource().openStream())
         val files = data.obj("files")!!.mapValues { CryptorageFile(it.value as JsonObject) }
         val meta = data.obj("meta")!!.mapValues { "${it.value}" }
         Index(files.toMutableMap(), meta.toMutableMap())

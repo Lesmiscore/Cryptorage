@@ -52,10 +52,10 @@ fun FileSource.withV1Encryption(keys: AesKeys): Cryptorage = CryptorageImplV1(th
 fun FileSource.withV2Encryption(password: String): Cryptorage = CryptorageImplV2(this, password)
 
 /** Provides a Cryptorage with a different IV for each segments */
-fun FileSource.withV3Encryption(password: String): Cryptorage = CryptorageImplV3(this, password)
+fun FileSource.withV3Encryption(password: String, preferManifestNonce: Boolean = false): Cryptorage = CryptorageImplV3(this, password, preferManifestNonce)
 
 /** Provides a Cryptorage with a different IV for each segments */
-fun FileSource.withV3Encryption(keys: AesKeys): Cryptorage = CryptorageImplV3(this, keys)
+fun FileSource.withV3Encryption(keys: AesKeys, preferManifestNonce: Boolean = false): Cryptorage = CryptorageImplV3(this, keys, preferManifestNonce)
 
 /** Combines Cryptorages as one, not writable */
 fun List<Cryptorage>.combine(): Cryptorage = CombinedCryptorage(this)
