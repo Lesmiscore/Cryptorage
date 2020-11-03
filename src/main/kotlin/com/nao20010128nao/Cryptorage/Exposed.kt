@@ -28,7 +28,7 @@ fun AesIv.toCryptoIv(): IvParameterSpec = IvParameterSpec(this)
 fun AesKeys.forCrypto(): Pair<SecretKeySpec, IvParameterSpec> = first.toCryptoKey() to second.toCryptoIv()
 
 /** Treats Web directory as FileSource */
-fun URL.asFileSource(fetcher: UrlFetcher = JavaNetUrlFetcher): FileSource = UrlFileSource(this, fetcher)
+fun URL.asFileSource(fetcher: UrlFetcher = UrlFetcher.default): FileSource = UrlFileSource(this, fetcher)
 
 /** Treats file system as FileSource */
 fun File.asFileSource(): FileSource = DirectoryFileSource(this)

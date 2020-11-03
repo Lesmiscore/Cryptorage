@@ -10,6 +10,10 @@ interface UrlFetcher {
 
     /** Perform GET request to that URL. */
     fun doGet(url: URL): InputStream
+
+    companion object {
+        var default: UrlFetcher = JavaNetUrlFetcher
+    }
 }
 
 object JavaNetUrlFetcher : UrlFetcher {
