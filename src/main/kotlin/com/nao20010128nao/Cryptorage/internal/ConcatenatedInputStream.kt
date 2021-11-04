@@ -27,7 +27,7 @@ class ConcatenatedInputStream(private val e: Iterator<InputStream>) : InputStrea
         }
     }
 
-    override fun available(): Int = if (current != null) current!!.available() else 0
+    override fun available(): Int = current?.available() ?: 0
 
     override fun read(): Int {
         while (current != null) {
@@ -62,8 +62,7 @@ class ConcatenatedInputStream(private val e: Iterator<InputStream>) : InputStrea
     }
 
     override fun close() {
-        do {
-            nextStream()
-        } while (current != null)
+        current?.close()
+        current = null
     }
 }
