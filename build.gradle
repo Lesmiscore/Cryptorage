@@ -20,7 +20,7 @@ dependencies {
     implementation 'com.beust:klaxon:5.6'
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'commons-codec:commons-codec:1.15'
-    implementation 'org.bitcoinj:bitcoinj-core:0.16.1'
+    implementation 'org.bitcoinj:bitcoinj-core:0.16.3'
 
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 }
